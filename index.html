@@ -317,6 +317,21 @@
             margin-bottom: 15px;
             font-size: 0.9rem;
         }
+
+        .chart-container {
+            width: 100%;
+            background-color: #FFFFFF;
+            border: 1px solid #E0E0E0;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
@@ -882,13 +897,11 @@
         // PESTAÑA ANÁLISIS ESTADÍSTICO
         // =========================================================================
 
-        // Formato con coma decimal (Colombia)
         function fmtNum(val, dec = 2) {
             if (val === null || val === undefined || isNaN(val)) return '-';
             return val.toLocaleString('es-CO', { minimumFractionDigits: dec, maximumFractionDigits: dec });
         }
 
-        // Actualiza las opciones del desplegable secundario de filtro
         function actualizarOpcionesFiltro() {
             const filtroVar = document.getElementById('filtroVariable').value;
             const grupo = document.getElementById('grupoFiltroValor');
@@ -904,7 +917,6 @@
 
             grupo.style.display = 'flex';
             
-            // Extraer categorías únicas
             const opciones = [...new Set(registros.map(r => r[filtroVar]).filter(Boolean))].sort();
             opciones.forEach(op => {
                 const optElem = document.createElement('option');
@@ -916,14 +928,12 @@
             ejecutarAnalisis();
         }
 
-        // Función principal de cálculo del módulo de análisis
         function ejecutarAnalisis() {
             const varSeleccionada = document.getElementById('analisisVariable').value;
             const filtroVar = document.getElementById('filtroVariable').value;
             const filtroVal = document.getElementById('filtroValor').value;
             const contenedor = document.getElementById('contenedorAnalisis');
 
-            // Filtrar conjunto de datos
             let datosFiltrados = [...registros];
             if (filtroVar && filtroVal) {
                 datosFiltrados = datosFiltrados.filter(r => r[filtroVar] === filtroVal);
@@ -943,7 +953,6 @@
             }
         }
 
-        // Método CUARTIL.INC de Excel
         function calcularCuartilINC(arr, q) {
             if (arr.length === 0) return 0;
             if (arr.length === 1) return arr[0];
@@ -960,9 +969,7 @@
             }
         }
 
-        // Análisis para Variables Cuantitativas
         function analizarCuantitativa(varKey, datos, contenedor) {
-            // Extraer el entero inicial del campo ordinal (ej: "4 - Bueno" -> 4)
             const attrOriginal = varKey === 'limpiezaNum' ? 'limpieza' : 'insumos';
             const valores = datos
                 .map(r => {
@@ -978,13 +985,9 @@
                 return;
             }
 
-            // Suma
             const suma = valores.reduce((acc, v) => acc + v, 0);
-
-            // Media
             const media = suma / n;
 
-            // Mediana
             let mediana = 0;
             if (n % 2 === 0) {
                 mediana = (valores[n / 2 - 1] + valores[n / 2]) / 2;
@@ -992,7 +995,6 @@
                 mediana = valores[Math.floor(n / 2)];
             }
 
-            // Moda
             const frecs = {};
             valores.forEach(v => frecs[v] = (frecs[v] || 0) + 1);
             let maxFrec = 0;
@@ -1008,12 +1010,10 @@
                 textoModa = modas.map(v => fmtNum(parseFloat(v), 0)).join(', ');
             }
 
-            // Mínimo, Máximo, Rango
             const min = valores[0];
             const max = valores[n - 1];
             const rango = max - min;
 
-            // Varianza Muestral (s²) y Desviación Estándar Muestral (s)
             let varianza = 0;
             let desviacion = 0;
             if (n > 1) {
@@ -1022,16 +1022,13 @@
                 desviacion = Math.sqrt(varianza);
             }
 
-            // Coeficiente de variación (CV %)
             const cv = media !== 0 ? (desviacion / media) * 100 : 0;
 
-            // Cuartiles (CUARTIL.INC) y RIC
             const Q1 = calcularCuartilINC(valores, 0.25);
             const Q2 = calcularCuartilINC(valores, 0.50);
             const Q3 = calcularCuartilINC(valores, 0.75);
             const RIC = Q3 - Q1;
 
-            // Construcción HTML Tabla Descriptiva
             let html = `
                 <h3 class="section-title">Medidas Descriptivas Muestrales</h3>
                 <div class="table-responsive">
@@ -1124,11 +1121,9 @@
                 </div>
             `;
 
-            // Tabla de Frecuencias para Datos Agrupados (Sturges)
             let k = Math.round(1 + 3.322 * Math.log10(n));
             if (k < 1) k = 1;
 
-            // Amplitud A = rango / k, redondeada hacia arriba a enteros
             let amplitud = rango === 0 ? 1 : Math.ceil(rango / k);
             if (amplitud === 0) amplitud = 1;
 
@@ -1157,12 +1152,12 @@
             let li = min;
             let Fi = 0;
             let Hi = 0;
+            const datosGraficoHist = [];
 
             for (let i = 0; i < k; i++) {
                 let ls = li + amplitud;
                 const esUltima = (i === k - 1);
 
-                // Conteo fi
                 const fi = valores.filter(v => {
                     if (esUltima) {
                         return v >= li && v <= ls;
@@ -1177,6 +1172,11 @@
                 const marca = (li + ls) / 2;
 
                 const formatoIntervalo = esUltima ? `[${fmtNum(li, 0)}, ${fmtNum(ls, 0)}]` : `[${fmtNum(li, 0)}, ${fmtNum(ls, 0)})`;
+
+                datosGraficoHist.push({
+                    etiqueta: formatoIntervalo,
+                    frecuencia: fi
+                });
 
                 html += `
                     <tr>
@@ -1198,12 +1198,17 @@
                         </tbody>
                     </table>
                 </div>
+
+                <h3 class="section-title">Histograma de Frecuencias</h3>
+                <div class="chart-container">
+                    <canvas id="canvasHistograma" width="600" height="300"></canvas>
+                </div>
             `;
 
             contenedor.innerHTML = html;
+            dibujarGraficoBarras('canvasHistograma', datosGraficoHist, true);
         }
 
-        // Análisis para Variables Cualitativas
         function analizarCualitativa(varKey, datos, contenedor) {
             const valores = datos.map(r => r[varKey]).filter(Boolean);
             const n = valores.length;
@@ -1213,7 +1218,6 @@
                 return;
             }
 
-            // Calcular Frecuencias Absolutas (fi)
             const conteos = {};
             valores.forEach(v => conteos[v] = (conteos[v] || 0) + 1);
 
@@ -1238,6 +1242,7 @@
 
             let Fi = 0;
             let Hi = 0;
+            const datosGraficoBarras = [];
 
             categorias.forEach(cat => {
                 const fi = conteos[cat];
@@ -1245,6 +1250,11 @@
                 const hi = fi / n;
                 Hi += hi;
                 const porcentaje = hi * 100;
+
+                datosGraficoBarras.push({
+                    etiqueta: cat,
+                    frecuencia: fi
+                });
 
                 html += `
                     <tr>
@@ -1272,16 +1282,62 @@
                         </tfoot>
                     </table>
                 </div>
+
+                <h3 class="section-title">Diagrama de Barras</h3>
+                <div class="chart-container">
+                    <canvas id="canvasBarras" width="600" height="300"></canvas>
+                </div>
             `;
 
             contenedor.innerHTML = html;
+            dibujarGraficoBarras('canvasBarras', datosGraficoBarras, false);
         }
 
-        // Inicialización al cargar la página
-        window.onload = function() {
-            setFechaHoraActual();
-            renderizarTabla();
-        };
-    </script>
-</body>
-</html>
+        // Dibuja tanto el Histograma (barras pegadas) como el Diagrama de Barras (separadas) usando Canvas Nativo
+        function dibujarGraficoBarras(canvasId, datos, esHistograma = false) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 50;
+
+            ctx.clearRect(0, 0, width, height);
+
+            if (datos.length === 0) return;
+
+            const maxVal = Math.max(...datos.map(d => d.frecuencia), 1);
+            
+            // Ejes X e Y
+            ctx.beginPath();
+            ctx.strokeStyle = '#1F3A5F';
+            ctx.lineWidth = 2;
+            ctx.moveTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding); // Eje X
+            ctx.moveTo(padding, height - padding);
+            ctx.lineTo(padding, padding / 2); // Eje Y
+            ctx.stroke();
+
+            const chartWidth = width - 2 * padding;
+            const chartHeight = height - 1.5 * padding;
+            const numBarras = datos.length;
+
+            const anchoEspacio = chartWidth / numBarras;
+            const anchoBarra = esHistograma ? anchoEspacio : anchoEspacio * 0.6;
+
+            datos.forEach((d, i) => {
+                const altoBarra = (d.frecuencia / maxVal) * chartHeight;
+                const x = esHistograma 
+                    ? padding + i * anchoEspacio 
+                    : padding + i * anchoEspacio + (anchoEspacio - anchoBarra) / 2;
+                const y = height - padding - altoBarra;
+
+                // Color de barras
+                ctx.fillStyle = '#2A9D8F';
+                ctx.fillRect(x, y, anchoBarra, altoBarra);
+
+                // Borde de la barra (crucial para histograma)
+                ctx.strokeStyle = '#1F3A5F';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(x, y, anchoBarra,
