@@ -184,7 +184,6 @@
             background-color: #142640;
         }
 
-        /* Sección de botones de Importación/Exportación */
         .actions-toolbar {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -286,7 +285,6 @@
             background-color: #C0392B;
         }
 
-        /* Estilos Pestaña Análisis */
         .section-title {
             color: var(--primary);
             font-size: 1.1rem;
@@ -342,10 +340,10 @@
     </header>
 
     <nav>
-        <button class="tab-button active" onclick="openTab('registrar')">Registrar</button>
-        <button class="tab-button" onclick="openTab('analisis')">Análisis</button>
-        <button class="tab-button" onclick="openTab('probabilidad')">Probabilidad</button>
-        <button class="tab-button" onclick="openTab('informe')">Informe</button>
+        <button class="tab-button active" onclick="openTab('registrar', event)">Registrar</button>
+        <button class="tab-button" onclick="openTab('analisis', event)">Análisis</button>
+        <button class="tab-button" onclick="openTab('probabilidad', event)">Probabilidad</button>
+        <button class="tab-button" onclick="openTab('informe', event)">Informe</button>
     </nav>
 
     <div class="container">
@@ -440,7 +438,6 @@
                 </div>
             </form>
 
-            <!-- BARRA DE GESTIÓN DE DATOS -->
             <div class="actions-toolbar">
                 <button type="button" class="btn-action btn-csv-export" onclick="exportarCSV()">Exportar CSV (Excel)</button>
                 <button type="button" class="btn-action btn-csv-import" onclick="document.getElementById('fileCSV').click()">Importar CSV y unir</button>
@@ -448,7 +445,6 @@
                 <button type="button" class="btn-action btn-json-import" onclick="document.getElementById('fileJSON').click()">Restaurar respaldo</button>
             </div>
 
-            <!-- Entradas de archivo ocultas para importación -->
             <input type="file" id="fileCSV" accept=".csv" style="display: none;" onchange="importarCSV(event)">
             <input type="file" id="fileJSON" accept=".json" style="display: none;" onchange="restaurarRespaldoJSON(event)">
 
@@ -526,7 +522,6 @@
             </div>
 
             <div id="contenedorAnalisis">
-                <!-- Se llena dinámicamente mediante JS -->
             </div>
         </div>
 
@@ -549,11 +544,9 @@
     </div>
 
     <script>
-        // Arreglo para almacenar los registros en memoria local
         let registros = JSON.parse(localStorage.getItem('unipaz_registros')) || [];
 
-        // Cambiar entre pestañas
-        function openTab(tabId) {
+        function openTab(tabId, ev) {
             const contents = document.querySelectorAll('.tab-content');
             const buttons = document.querySelectorAll('.tab-button');
             
@@ -562,23 +555,21 @@
             
             document.getElementById(tabId).classList.add('active');
             
-            // Buscar el botón correspondiente para marcarlo activo
-            const activeBtn = Array.from(buttons).find(b => b.getAttribute('onclick').includes(tabId));
-            if(activeBtn) activeBtn.classList.add('active');
+            if (ev && ev.currentTarget) {
+                ev.currentTarget.classList.add('active');
+            }
 
             if (tabId === 'analisis') {
                 ejecutarAnalisis();
             }
         }
 
-        // Establecer fecha y hora actual en el campo de entrada
         function setFechaHoraActual() {
             const ahora = new Date();
             ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
             document.getElementById('fechaHora').value = ahora.toISOString().slice(0, 16);
         }
 
-        // Calcular la franja horaria a partir de una cadena HH:MM
         function calcularFranjaHoraria(dateTimeStr) {
             if (!dateTimeStr) return '';
             const fechaObj = new Date(dateTimeStr);
@@ -587,7 +578,6 @@
             return `${horaInicio}:00–${horaInicio}:59`;
         }
 
-        // Mostrar alertas personalizadas en pantalla
         function mostrarAlerta(mensaje, esError = false) {
             const alertBox = document.getElementById('alertBox');
             alertBox.textContent = mensaje;
@@ -599,7 +589,6 @@
             }, 4500);
         }
 
-        // Renderizar la tabla de registros y actualizar el contador
         function renderizarTabla() {
             const tbody = document.getElementById('tablaCuerpo');
             tbody.innerHTML = '';
@@ -607,7 +596,6 @@
             registros.forEach((reg, index) => {
                 const tr = document.createElement('tr');
                 
-                // Formatear la fecha para visualización
                 const fechaFormat = new Date(reg.fechaHora).toLocaleString('es-CO', {
                     dateStyle: 'short',
                     timeStyle: 'short'
@@ -634,7 +622,6 @@
             document.getElementById('totalRegistros').textContent = registros.length;
         }
 
-        // Procesar el envío del formulario
         document.getElementById('registroForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -647,7 +634,6 @@
             const frecuenciaPersonal = document.getElementById('frecuenciaPersonal').value;
             const infraestructura = document.getElementById('infraestructura').value;
 
-            // Validación de campos vacíos
             if (!fechaHora || !piso || !ubicacion || !tipoBano || !limpieza || !insumos || !frecuenciaPersonal || !infraestructura) {
                 mostrarAlerta('Por favor, diligencie todos los campos antes de guardar.', true);
                 return;
@@ -674,7 +660,6 @@
             renderizarTabla();
         });
 
-        // Eliminar registro por su índice
         function eliminarRegistro(index) {
             const confirmar = confirm(`¿Está seguro de eliminar el registro #${index + 1}?`);
             if (confirmar) {
@@ -684,8 +669,6 @@
                 renderizarTabla();
             }
         }
-
-        // --- FUNCIONES DE EXPORTACIÓN E IMPORTACIÓN ---
 
         function formatearValorCSV(val) {
             if (val === null || val === undefined) return '""';
@@ -700,15 +683,9 @@
             }
 
             const encabezados = [
-                "Fecha",
-                "Hora",
-                "Franja horaria",
-                "Piso del edificio",
-                "Ubicación del baño",
-                "Tipo de baño",
-                "Percepción de limpieza y aseo (1 a 5)",
-                "Disponibilidad de insumos (1 a 5)",
-                "Frecuencia con que ve al personal de aseo trabajando",
+                "Fecha", "Hora", "Franja horaria", "Piso del edificio",
+                "Ubicación del baño", "Tipo de baño", "Percepción de limpieza y aseo (1 a 5)",
+                "Disponibilidad de insumos (1 a 5)", "Frecuencia con que ve al personal de aseo trabajando",
                 "Estado de la infraestructura y grifería"
             ];
 
@@ -716,7 +693,6 @@
 
             registros.forEach(reg => {
                 const fObj = new Date(reg.fechaHora);
-                
                 const anio = fObj.getFullYear();
                 const mes = String(fObj.getMonth() + 1).padStart(2, '0');
                 const dia = String(fObj.getDate()).padStart(2, '0');
@@ -795,20 +771,13 @@
                 }
 
                 const encabezadosEsperados = [
-                    "Fecha",
-                    "Hora",
-                    "Franja horaria",
-                    "Piso del edificio",
-                    "Ubicación del baño",
-                    "Tipo de baño",
-                    "Percepción de limpieza y aseo (1 a 5)",
-                    "Disponibilidad de insumos (1 a 5)",
-                    "Frecuencia con que ve al personal de aseo trabajando",
+                    "Fecha", "Hora", "Franja horaria", "Piso del edificio",
+                    "Ubicación del baño", "Tipo de baño", "Percepción de limpieza y aseo (1 a 5)",
+                    "Disponibilidad de insumos (1 a 5)", "Frecuencia con que ve al personal de aseo trabajando",
                     "Estado de la infraestructura y grifería"
                 ];
 
                 const encabezadosObtenidos = parsearLineaCSV(lineas[0]);
-
                 const coinciden = encabezadosEsperados.length === encabezadosObtenidos.length &&
                     encabezadosEsperados.every((val, idx) => val === encabezadosObtenidos[idx]);
 
@@ -893,9 +862,9 @@
             lector.readAsText(archivo);
         }
 
-        // =========================================================================
-        // PESTAÑA ANÁLISIS ESTADÍSTICO
-        // =========================================================================
+        // ==========================================
+        // ANÁLISIS ESTADÍSTICO
+        // ==========================================
 
         function fmtNum(val, dec = 2) {
             if (val === null || val === undefined || isNaN(val)) return '-';
@@ -1003,8 +972,8 @@
             }
 
             let textoModa = '';
-            if (maxFrec === 1) {
-                textoModa = 'No hay moda';
+            if (maxFrec === 1 || Object.keys(frecs).length === 1) {
+                textoModa = maxFrec === 1 ? 'No hay moda' : fmtNum(parseFloat(Object.keys(frecs)[0]), 0);
             } else {
                 const modas = Object.keys(frecs).filter(k => frecs[k] === maxFrec);
                 textoModa = modas.map(v => fmtNum(parseFloat(v), 0)).join(', ');
@@ -1023,7 +992,6 @@
             }
 
             const cv = media !== 0 ? (desviacion / media) * 100 : 0;
-
             const Q1 = calcularCuartilINC(valores, 0.25);
             const Q2 = calcularCuartilINC(valores, 0.50);
             const Q3 = calcularCuartilINC(valores, 0.75);
@@ -1041,81 +1009,21 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>Tamaño de la muestra</td>
-                                <td class="formula-text">n</td>
-                                <td>${n}</td>
-                            </tr>
-                            <tr>
-                                <td>Suma total</td>
-                                <td class="formula-text">∑ xᵢ</td>
-                                <td>${fmtNum(suma, 2)}</td>
-                            </tr>
-                            <tr>
-                                <td>Media aritmética</td>
-                                <td class="formula-text">x̄ = (∑ xᵢ) / n</td>
-                                <td><strong>${fmtNum(media, 2)}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Mediana</td>
-                                <td class="formula-text">Me (Posición central)</td>
-                                <td>${fmtNum(mediana, 2)}</td>
-                            </tr>
-                            <tr>
-                                <td>Moda</td>
-                                <td class="formula-text">Mo (Mayor frecuencia)</td>
-                                <td>${textoModa}</td>
-                            </tr>
-                            <tr>
-                                <td>Mínimo</td>
-                                <td class="formula-text">Min</td>
-                                <td>${fmtNum(min, 0)}</td>
-                            </tr>
-                            <tr>
-                                <td>Máximo</td>
-                                <td class="formula-text">Max</td>
-                                <td>${fmtNum(max, 0)}</td>
-                            </tr>
-                            <tr>
-                                <td>Rango</td>
-                                <td class="formula-text">R = Max − Min</td>
-                                <td>${fmtNum(rango, 0)}</td>
-                            </tr>
-                            <tr>
-                                <td>Varianza Muestral</td>
-                                <td class="formula-text">s² = ∑(xᵢ − x̄)² / (n − 1)</td>
-                                <td>${fmtNum(varianza, 4)}</td>
-                            </tr>
-                            <tr>
-                                <td>Desviación Estándar Muestral</td>
-                                <td class="formula-text">s = √s²</td>
-                                <td>${fmtNum(desviacion, 4)}</td>
-                            </tr>
-                            <tr>
-                                <td>Coeficiente de Variación</td>
-                                <td class="formula-text">CV = (s / x̄) × 100%</td>
-                                <td>${fmtNum(cv, 2)}%</td>
-                            </tr>
-                            <tr>
-                                <td>Cuartil 1 (Q1)</td>
-                                <td class="formula-text">CUARTIL.INC (25%)</td>
-                                <td>${fmtNum(Q1, 2)}</td>
-                            </tr>
-                            <tr>
-                                <td>Cuartil 2 (Q2)</td>
-                                <td class="formula-text">CUARTIL.INC (50%)</td>
-                                <td>${fmtNum(Q2, 2)}</td>
-                            </tr>
-                            <tr>
-                                <td>Cuartil 3 (Q3)</td>
-                                <td class="formula-text">CUARTIL.INC (75%)</td>
-                                <td>${fmtNum(Q3, 2)}</td>
-                            </tr>
-                            <tr>
-                                <td>Rango Intercuartílico</td>
-                                <td class="formula-text">RIC = Q3 − Q1</td>
-                                <td>${fmtNum(RIC, 2)}</td>
-                            </tr>
+                            <tr><td>Tamaño de la muestra</td><td class="formula-text">n</td><td>${n}</td></tr>
+                            <tr><td>Suma total</td><td class="formula-text">∑ xᵢ</td><td>${fmtNum(suma, 2)}</td></tr>
+                            <tr><td>Media aritmética</td><td class="formula-text">x̄ = (∑ xᵢ) / n</td><td><strong>${fmtNum(media, 2)}</strong></td></tr>
+                            <tr><td>Mediana</td><td class="formula-text">Me (Posición central)</td><td>${fmtNum(mediana, 2)}</td></tr>
+                            <tr><td>Moda</td><td class="formula-text">Mo (Mayor frecuencia)</td><td>${textoModa}</td></tr>
+                            <tr><td>Mínimo</td><td class="formula-text">Min</td><td>${fmtNum(min, 0)}</td></tr>
+                            <tr><td>Máximo</td><td class="formula-text">Max</td><td>${fmtNum(max, 0)}</td></tr>
+                            <tr><td>Rango</td><td class="formula-text">R = Max − Min</td><td>${fmtNum(rango, 0)}</td></tr>
+                            <tr><td>Varianza Muestral</td><td class="formula-text">s² = ∑(xᵢ − x̄)² / (n − 1)</td><td>${n > 1 ? fmtNum(varianza, 4) : 'N/A (n=1)'}</td></tr>
+                            <tr><td>Desviación Estándar Muestral</td><td class="formula-text">s = √s²</td><td>${n > 1 ? fmtNum(desviacion, 4) : 'N/A (n=1)'}</td></tr>
+                            <tr><td>Coeficiente de Variación</td><td class="formula-text">CV = (s / x̄) × 100%</td><td>${n > 1 ? fmtNum(cv, 2) + '%' : 'N/A (n=1)'}</td></tr>
+                            <tr><td>Cuartil 1 (Q1)</td><td class="formula-text">CUARTIL.INC (25%)</td><td>${fmtNum(Q1, 2)}</td></tr>
+                            <tr><td>Cuartil 2 (Q2)</td><td class="formula-text">CUARTIL.INC (50%)</td><td>${fmtNum(Q2, 2)}</td></tr>
+                            <tr><td>Cuartil 3 (Q3)</td><td class="formula-text">CUARTIL.INC (75%)</td><td>${fmtNum(Q3, 2)}</td></tr>
+                            <tr><td>Rango Intercuartílico</td><td class="formula-text">RIC = Q3 − Q1</td><td>${fmtNum(RIC, 2)}</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1159,9 +1067,7 @@
                 const esUltima = (i === k - 1);
 
                 const fi = valores.filter(v => {
-                    if (esUltima) {
-                        return v >= li && v <= ls;
-                    }
+                    if (esUltima) return v >= li && v <= ls;
                     return v >= li && v < ls;
                 }).length;
 
@@ -1170,13 +1076,9 @@
                 Hi += hi;
                 const porcentaje = hi * 100;
                 const marca = (li + ls) / 2;
-
                 const formatoIntervalo = esUltima ? `[${fmtNum(li, 0)}, ${fmtNum(ls, 0)}]` : `[${fmtNum(li, 0)}, ${fmtNum(ls, 0)})`;
 
-                datosGraficoHist.push({
-                    etiqueta: formatoIntervalo,
-                    frecuencia: fi
-                });
+                datosGraficoHist.push({ etiqueta: formatoIntervalo, frecuencia: fi });
 
                 html += `
                     <tr>
@@ -1220,7 +1122,6 @@
 
             const conteos = {};
             valores.forEach(v => conteos[v] = (conteos[v] || 0) + 1);
-
             const categorias = Object.keys(conteos).sort();
 
             let html = `
@@ -1251,10 +1152,7 @@
                 Hi += hi;
                 const porcentaje = hi * 100;
 
-                datosGraficoBarras.push({
-                    etiqueta: cat,
-                    frecuencia: fi
-                });
+                datosGraficoBarras.push({ etiqueta: cat, frecuencia: fi });
 
                 html += `
                     <tr>
@@ -1293,7 +1191,6 @@
             dibujarGraficoBarras('canvasBarras', datosGraficoBarras, false);
         }
 
-        // Dibuja tanto el Histograma (barras pegadas) como el Diagrama de Barras (separadas) usando Canvas Nativo
         function dibujarGraficoBarras(canvasId, datos, esHistograma = false) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
@@ -1304,19 +1201,17 @@
             const padding = 50;
 
             ctx.clearRect(0, 0, width, height);
-
             if (datos.length === 0) return;
 
             const maxVal = Math.max(...datos.map(d => d.frecuencia), 1);
             
-            // Ejes X e Y
             ctx.beginPath();
             ctx.strokeStyle = '#1F3A5F';
             ctx.lineWidth = 2;
             ctx.moveTo(padding, height - padding);
-            ctx.lineTo(width - padding, height - padding); // Eje X
+            ctx.lineTo(width - padding, height - padding);
             ctx.moveTo(padding, height - padding);
-            ctx.lineTo(padding, padding / 2); // Eje Y
+            ctx.lineTo(padding, padding / 2);
             ctx.stroke();
 
             const chartWidth = width - 2 * padding;
@@ -1333,11 +1228,30 @@
                     : padding + i * anchoEspacio + (anchoEspacio - anchoBarra) / 2;
                 const y = height - padding - altoBarra;
 
-                // Color de barras
                 ctx.fillStyle = '#2A9D8F';
                 ctx.fillRect(x, y, anchoBarra, altoBarra);
 
-                // Borde de la barra (crucial para histograma)
                 ctx.strokeStyle = '#1F3A5F';
                 ctx.lineWidth = 1;
-                ctx.strokeRect(x, y, anchoBarra,
+                ctx.strokeRect(x, y, anchoBarra, altoBarra);
+
+                ctx.fillStyle = '#1F3A5F';
+                ctx.font = 'bold 12px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText(d.frecuencia, x + anchoBarra / 2, y - 5);
+
+                ctx.fillStyle = '#333333';
+                ctx.font = '10px Segoe UI';
+                let lbl = d.etiqueta;
+                if (lbl.length > 15) lbl = lbl.substring(0, 12) + '...';
+                ctx.fillText(lbl, x + anchoBarra / 2, height - padding + 15);
+            });
+        }
+
+        window.onload = function() {
+            setFechaHoraActual();
+            renderizarTabla();
+        };
+    </script>
+</body>
+</html>
