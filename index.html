@@ -184,6 +184,53 @@
             background-color: #142640;
         }
 
+        /* Sección de botones de Importación/Exportación */
+        .actions-toolbar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #F8F9FA;
+            border: 1px solid #E0E0E0;
+            border-radius: var(--border-radius);
+        }
+
+        .btn-action {
+            padding: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: opacity 0.2s;
+            text-align: center;
+        }
+
+        .btn-action:hover {
+            opacity: 0.9;
+        }
+
+        .btn-csv-export {
+            background-color: var(--secondary);
+            color: #FFFFFF;
+        }
+
+        .btn-csv-import {
+            background-color: #34495E;
+            color: #FFFFFF;
+        }
+
+        .btn-json-export {
+            background-color: var(--accent);
+            color: #FFFFFF;
+        }
+
+        .btn-json-import {
+            background-color: #7F8C8D;
+            color: #FFFFFF;
+        }
+
         .counter-box {
             margin: 25px 0 15px 0;
             font-weight: bold;
@@ -345,6 +392,18 @@
                 </div>
             </form>
 
+            <!-- BARRA DE GESTIÓN DE DATOS -->
+            <div class="actions-toolbar">
+                <button type="button" class="btn-action btn-csv-export" onclick="exportarCSV()">Exportar CSV (Excel)</button>
+                <button type="button" class="btn-action btn-csv-import" onclick="document.getElementById('fileCSV').click()">Importar CSV y unir</button>
+                <button type="button" class="btn-action btn-json-export" onclick="descargarRespaldoJSON()">Descargar respaldo (.json)</button>
+                <button type="button" class="btn-action btn-json-import" onclick="document.getElementById('fileJSON').click()">Restaurar respaldo</button>
+            </div>
+
+            <!-- Entradas de archivo ocultas para importación -->
+            <input type="file" id="fileCSV" accept=".csv" style="display: none;" onchange="importarCSV(event)">
+            <input type="file" id="fileJSON" accept=".json" style="display: none;" onchange="restaurarRespaldoJSON(event)">
+
             <div class="counter-box">
                 <span>Registros guardados:</span>
                 <span id="totalRegistros">0</span>
@@ -440,7 +499,7 @@
 
             setTimeout(() => {
                 alertBox.style.display = 'none';
-            }, 3500);
+            }, 4500);
         }
 
         // Renderizar la tabla de registros y actualizar el contador
@@ -527,6 +586,225 @@
                 mostrarAlerta('El registro ha sido eliminado correctamente.');
                 renderizarTabla();
             }
+        }
+
+        // --- FUNCIONES DE EXPORTACIÓN E IMPORTACIÓN ---
+
+        // Helper para escapar valores en el CSV
+        function formatearValorCSV(val) {
+            if (val === null || val === undefined) return '""';
+            let str = String(val).replace(/"/g, '""');
+            return `"${str}"`;
+        }
+
+        // Exportar a CSV (Separador ; | UTF-8 BOM | Coma decimal)
+        function exportarCSV() {
+            if (registros.length === 0) {
+                mostrarAlerta('No hay registros guardados para exportar.', true);
+                return;
+            }
+
+            const encabezados = [
+                "Fecha",
+                "Hora",
+                "Franja horaria",
+                "Piso del edificio",
+                "Ubicación del baño",
+                "Tipo de baño",
+                "Percepción de limpieza y aseo (1 a 5)",
+                "Disponibilidad de insumos (1 a 5)",
+                "Frecuencia con que ve al personal de aseo trabajando",
+                "Estado de la infraestructura y grifería"
+            ];
+
+            let csvContent = encabezados.join(";") + "\r\n";
+
+            registros.forEach(reg => {
+                const fObj = new Date(reg.fechaHora);
+                
+                // Extraer Fecha en formato YYYY-MM-DD
+                const anio = fObj.getFullYear();
+                const mes = String(fObj.getMonth() + 1).padStart(2, '0');
+                const dia = String(fObj.getDate()).padStart(2, '0');
+                const fechaStr = `${anio}-${mes}-${dia}`;
+
+                // Extraer Hora en formato HH:MM
+                const horas = String(fObj.getHours()).padStart(2, '0');
+                const minutos = String(fObj.getMinutes()).padStart(2, '0');
+                const horaStr = `${horas}:${minutos}`;
+
+                // Formatear decimales en caso de existir con coma (es-CO)
+                const limpiezaVal = reg.limpieza ? reg.limpieza.replace('.', ',') : '';
+                const insumosVal = reg.insumos ? reg.insumos.replace('.', ',') : '';
+
+                const fila = [
+                    formatearValorCSV(fechaStr),
+                    formatearValorCSV(horaStr),
+                    formatearValorCSV(reg.franjaHoraria),
+                    formatearValorCSV(reg.piso),
+                    formatearValorCSV(reg.ubicacion),
+                    formatearValorCSV(reg.tipoBano),
+                    formatearValorCSV(limpiezaVal),
+                    formatearValorCSV(insumosVal),
+                    formatearValorCSV(reg.frecuenciaPersonal),
+                    formatearValorCSV(reg.infraestructura)
+                ];
+
+                csvContent += fila.join(";") + "\r\n";
+            });
+
+            // BOM UTF-8 (\uFEFF) para correcta apertura en Excel
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `EstadíApp_Baños_UNIPAZ_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Importar CSV y unir con los existentes
+        function importarCSV(event) {
+            const archivo = event.target.files[0];
+            if (!archivo) return;
+
+            const lector = new FileReader();
+            lector.onload = function(e) {
+                const contenido = e.target.result;
+                const lineas = contenido.split(/\r\n|\n/).filter(line => line.trim() !== '');
+
+                if (lineas.length < 2) {
+                    mostrarAlerta('El archivo CSV está vacío o no contiene datos válidos.', true);
+                    return;
+                }
+
+                // Función auxiliar para parsear líneas de CSV respetando comillas y delimitador ';'
+                function parsearLineaCSV(linea) {
+                    const resultado = [];
+                    let campoActual = '';
+                    let enComillas = false;
+
+                    for (let i = 0; i < linea.length; i++) {
+                        const char = linea[i];
+                        if (char === '"') {
+                            if (enComillas && linea[i + 1] === '"') {
+                                campoActual += '"';
+                                i++;
+                            } else {
+                                enComillas = !enComillas;
+                            }
+                        } else if (char === ';' && !enComillas) {
+                            resultado.push(campoActual.trim());
+                            campoActual = '';
+                        } else {
+                            campoActual += char;
+                        }
+                    }
+                    resultado.push(campoActual.trim());
+                    return resultado;
+                }
+
+                const encabezadosEsperados = [
+                    "Fecha",
+                    "Hora",
+                    "Franja horaria",
+                    "Piso del edificio",
+                    "Ubicación del baño",
+                    "Tipo de baño",
+                    "Percepción de limpieza y aseo (1 a 5)",
+                    "Disponibilidad de insumos (1 a 5)",
+                    "Frecuencia con que ve al personal de aseo trabajando",
+                    "Estado de la infraestructura y grifería"
+                ];
+
+                const encabezadosObtenidos = parsearLineaCSV(lineas[0]);
+
+                // Validar si las columnas coinciden
+                const coinciden = encabezadosEsperados.length === encabezadosObtenidos.length &&
+                    encabezadosEsperados.every((val, idx) => val === encabezadosObtenidos[idx]);
+
+                if (!coinciden) {
+                    mostrarAlerta('El archivo CSV no tiene la estructura o las columnas requeridas por esta aplicación.', true);
+                    event.target.value = '';
+                    return;
+                }
+
+                let importados = 0;
+
+                for (let i = 1; i < lineas.length; i++) {
+                    const datos = parsearLineaCSV(lineas[i]);
+                    if (datos.length < 10) continue;
+
+                    const fecha = datos[0];
+                    const hora = datos[1];
+                    const fechaHora = (fecha && hora) ? `${fecha}T${hora}` : new Date().toISOString().slice(0, 16);
+
+                    const nuevoReg = {
+                        fechaHora: fechaHora,
+                        franjaHoraria: datos[2] || calcularFranjaHoraria(fechaHora),
+                        piso: datos[3],
+                        ubicacion: datos[4],
+                        tipoBano: datos[5],
+                        limpieza: datos[6],
+                        insumos: datos[7],
+                        frecuenciaPersonal: datos[8],
+                        infraestructura: datos[9]
+                    };
+
+                    registros.push(nuevoReg);
+                    importados++;
+                }
+
+                localStorage.setItem('unipaz_registros', JSON.stringify(registros));
+                renderizarTabla();
+                mostrarAlerta(`Se importaron y unieron ${importados} registros exitosamente.`);
+                event.target.value = '';
+            };
+
+            lector.readAsText(archivo, 'UTF-8');
+        }
+
+        // Descargar Respaldo JSON
+        function descargarRespaldoJSON() {
+            if (registros.length === 0) {
+                mostrarAlerta('No hay datos para realizar el respaldo.', true);
+                return;
+            }
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(registros, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `Respaldo_EstadíApp_${new Date().toISOString().slice(0, 10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // Restaurar Respaldo JSON
+        function restaurarRespaldoJSON(event) {
+            const archivo = event.target.files[0];
+            if (!archivo) return;
+
+            const lector = new FileReader();
+            lector.onload = function(e) {
+                try {
+                    const datosImportados = JSON.parse(e.target.result);
+                    if (Array.isArray(datosImportados)) {
+                        registros = datosImportados;
+                        localStorage.setItem('unipaz_registros', JSON.stringify(registros));
+                        renderizarTabla();
+                        mostrarAlerta('Respaldo restaurado correctamente.');
+                    } else {
+                        mostrarAlerta('El archivo de respaldo JSON no tiene un formato válido.', true);
+                    }
+                } catch (err) {
+                    mostrarAlerta('Error al leer el archivo JSON de respaldo.', true);
+                }
+                event.target.value = '';
+            };
+
+            lector.readAsText(archivo);
         }
 
         // Inicialización al cargar la página
