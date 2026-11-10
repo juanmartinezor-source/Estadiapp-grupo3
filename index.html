@@ -306,9 +306,10 @@
             padding: 15px;
             margin-top: 15px;
             text-align: center;
+            overflow-x: auto;
         }
 
-        canvas {
+        svg {
             max-width: 100%;
             height: auto;
         }
@@ -1094,39 +1095,45 @@
 
                 <h3 class="section-title">Histograma de Frecuencias y Polígono</h3>
                 <div class="chart-container">
-                    <canvas id="canvasHistograma" width="650" height="320"></canvas>
+                    ${generarSVGHistogramaPoligono(datosGraficoHist)}
                     <div class="chart-caption">Intervalos de clase · barras = histograma, línea = polígono de frecuencias</div>
                 </div>
 
                 <h3 class="section-title">Diagrama de Caja y Bigotes (Boxplot)</h3>
                 <div class="chart-container">
-                    <canvas id="canvasBoxplot" width="650" height="180"></canvas>
+                    ${generarSVGBoxplot(min, Q1, mediana, Q3, max, media, nombreVarTxt)}
                 </div>
             `;
 
-            // LECTURA AUTOMÁTICA
-            let sesgoTxt = "";
-            if (Math.abs(media - mediana) < 0.05) {
-                sesgoTxt = "La distribución es aproximadamente simétrica (media ≈ mediana).";
+            // LECTURA AUTOMÁTICA CUANTITATIVA
+            let simetriaTxt = "";
+            const diffMM = Math.abs(media - mediana);
+            if (diffMM < 0.01) {
+                simetriaTxt = "simétrica (media = mediana)";
             } else if (media > mediana) {
-                sesgoTxt = "La distribución es con sesgo positivo, hacia la derecha (media > mediana): hay algunos valores altos que jalan el promedio.";
+                simetriaTxt = "con sesgo positivo (media > mediana)";
             } else {
-                sesgoTxt = "La distribución es con sesgo negativo, hacia la izquierda (media < mediana): hay algunos valores bajos que jalan el promedio.";
+                simetriaTxt = "con sesgo negativo (media < mediana)";
             }
 
-            let dispTxt = cv >= 30 ? `es decir, los datos son muy dispersos (CV ≥ 30%): el promedio solo no describe bien el proceso.` : `es decir, los datos son homogéneos (CV < 30%).`;
+            let cvTxt = "";
+            if (n <= 1) {
+                cvTxt = "no es posible determinar la variabilidad con un solo dato.";
+            } else if (cv < 15) {
+                cvTxt = `homogéneos (CV = ${fmtNum(cv, 2)} % < 15 %).`;
+            } else if (cv <= 30) {
+                cvTxt = `de variabilidad moderada (CV = ${fmtNum(cv, 2)} % entre 15 % y 30 %).`;
+            } else {
+                cvTxt = `muy dispersos (CV = ${fmtNum(cv, 2)} % ≥ 30 %).`;
+            }
 
             html += `
                 <div class="info-card">
-                    <strong>Lectura automática (comprruébenla y amplíenla):</strong> con ${n} datos, el valor promedio de «${nombreVarTxt}» es ${fmtNum(media, 2)} y la mitad de los datos está por debajo de ${fmtNum(mediana, 2)}. ${sesgoTxt} La desviación estándar es ${fmtNum(desviacion, 2)} y el CV es ${fmtNum(cv, 2)} %, ${dispTxt} El 50 % central de los datos está entre ${fmtNum(Q1, 2)} y ${fmtNum(Q3, 2)}.
+                    <strong>Lectura automática:</strong> Para la variable «${nombreVarTxt}», la distribución es <strong>${simetriaTxt}</strong>. Según el Coeficiente de Variación, los datos son <strong>${cvTxt}</strong>
                 </div>
             `;
 
             contenedor.innerHTML = html;
-            
-            // DIBUJAR GRÁFICOS
-            dibujarHistogramaConPoligono('canvasHistograma', datosGraficoHist);
-            dibujarBoxplot('canvasBoxplot', min, Q1, mediana, Q3, max, media, nombreVarTxt);
         }
 
         function analizarCualitativa(varKey, datos, contenedor) {
@@ -1162,6 +1169,8 @@
             let Fi = 0;
             let Hi = 0;
             const datosGraficoBarras = [];
+            let maxCat = '';
+            let maxFreqVal = -1;
 
             categorias.forEach(cat => {
                 const fi = conteos[cat];
@@ -1169,6 +1178,11 @@
                 const hi = fi / n;
                 Hi += hi;
                 const porcentaje = hi * 100;
+
+                if (fi > maxFreqVal) {
+                    maxFreqVal = fi;
+                    maxCat = cat;
+                }
 
                 datosGraficoBarras.push({ etiqueta: cat, frecuencia: fi, porcentaje: porcentaje });
 
@@ -1183,6 +1197,8 @@
                     </tr>
                 `;
             });
+
+            const maxPorcentaje = (maxFreqVal / n) * 100;
 
             html += `
                         </tbody>
@@ -1201,146 +1217,111 @@
 
                 <h3 class="section-title">Diagrama de Barras Horizontal</h3>
                 <div class="chart-container">
-                    <canvas id="canvasBarrasHorizontal" width="650" height="${Math.max(220, categorias.length * 45)}"></canvas>
+                    ${generarSVGBarrasHorizontal(datosGraficoBarras)}
+                </div>
+
+                <div class="info-card">
+                    <strong>Lectura automática:</strong> La categoría más frecuente es <strong>«${maxCat}»</strong> con <strong>${maxFreqVal}</strong> apariciones, correspondiente al <strong>${fmtNum(maxPorcentaje, 2)} %</strong> del total de las observaciones.
                 </div>
             `;
 
             contenedor.innerHTML = html;
-            dibujarBarrasHorizontal('canvasBarrasHorizontal', datosGraficoBarras, n);
         }
 
-        // Dibuja el HISTOGRAMA + POLÍGONO DE FRECUENCIAS
-        function dibujarHistogramaConPoligono(canvasId, datos) {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
+        // ==========================================
+        // GENERACIÓN DE GRÁFICOS SVG PURO
+        // ==========================================
 
-            const width = canvas.width;
-            const height = canvas.height;
-            const padding = 50;
+        function generarSVGHistogramaPoligono(datos) {
+            if (!datos || datos.length === 0) return '';
 
-            ctx.clearRect(0, 0, width, height);
-            if (datos.length === 0) return;
+            const width = 650;
+            const height = 320;
+            const paddingLeft = 50;
+            const paddingBottom = 50;
+            const paddingTop = 30;
+            const paddingRight = 30;
+
+            const chartW = width - paddingLeft - paddingRight;
+            const chartH = height - paddingTop - paddingBottom;
 
             const maxFrec = Math.max(...datos.map(d => d.frecuencia), 1);
-            
-            // Eje X e Y
-            ctx.beginPath();
-            ctx.strokeStyle = '#1F3A5F';
-            ctx.lineWidth = 1.5;
-            ctx.moveTo(padding, height - padding);
-            ctx.lineTo(width - padding, height - padding);
-            ctx.moveTo(padding, height - padding);
-            ctx.lineTo(padding, padding / 2);
-            ctx.stroke();
+            const numBarras = datos.length;
+            const anchoBarra = chartW / numBarras;
 
-            // Marcas Eje Y (Frecuencias)
-            ctx.fillStyle = '#666';
-            ctx.font = '10px Segoe UI';
-            ctx.textAlign = 'right';
+            let svgContent = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
+
+            // Ejes
+            svgContent += `<line x1="${paddingLeft}" y1="${paddingTop}" x2="${paddingLeft}" y2="${height - paddingBottom}" stroke="#1F3A5F" stroke-width="2"/>`;
+            svgContent += `<line x1="${paddingLeft}" y1="${height - paddingBottom}" x2="${width - paddingRight}" y2="${height - paddingBottom}" stroke="#1F3A5F" stroke-width="2"/>`;
+
+            // Marcas y grilla Eje Y (Frecuencia)
             const pasosY = Math.min(maxFrec, 5);
             for (let i = 0; i <= pasosY; i++) {
                 const val = Math.round((maxFrec / pasosY) * i);
-                const yPos = height - padding - ((yVal = (val / maxFrec) * (height - 1.5 * padding)));
-                ctx.fillText(val, padding - 8, yPos + 3);
-                
-                ctx.beginPath();
-                ctx.strokeStyle = '#F0F0F0';
-                ctx.moveTo(padding, yPos);
-                ctx.lineTo(width - padding, yPos);
-                ctx.stroke();
+                const yPos = height - paddingBottom - (val / maxFrec) * chartH;
+                svgContent += `<text x="${paddingLeft - 8}" y="${yPos + 4}" fill="#666666" font-size="10" text-anchor="end" font-family="Segoe UI">${val}</text>`;
+                svgContent += `<line x1="${paddingLeft}" y1="${yPos}" x2="${width - paddingRight}" y2="${yPos}" stroke="#F0F0F0" stroke-width="1"/>`;
             }
 
-            const chartWidth = width - 2 * padding;
-            const chartHeight = height - 1.5 * padding;
-            const numBarras = datos.length;
-            const anchoBarra = chartWidth / numBarras;
+            // Etiqueta Eje Y
+            svgContent += `<text x="${paddingLeft - 35}" y="${paddingTop + chartH / 2}" fill="#1F3A5F" font-size="11" font-weight="bold" text-anchor="middle" font-family="Segoe UI" transform="rotate(-90, ${paddingLeft - 35}, ${paddingTop + chartH / 2})">Frecuencia (fi)</text>`;
 
             const puntosPoligono = [];
+            // Punto inicial del polígono (frecuencia 0)
+            puntosPoligono.push({ x: paddingLeft, y: height - paddingBottom, val: 0 });
 
-            // Punto inicial polígono en 0
-            puntosPoligono.push({ x: padding, y: height - padding, val: 0 });
-
-            // Dibujar Barras del Histograma
+            // Dibujar Barras
             datos.forEach((d, i) => {
-                const altoBarra = (d.frecuencia / maxFrec) * chartHeight;
-                const x = padding + i * anchoBarra;
-                const y = height - padding - altoBarra;
+                const altoBarra = (d.frecuencia / maxFrec) * chartH;
+                const x = paddingLeft + i * anchoBarra;
+                const y = height - paddingBottom - altoBarra;
 
-                ctx.fillStyle = '#2A9D8F';
-                ctx.fillRect(x, y, anchoBarra, altoBarra);
+                svgContent += `<rect x="${x}" y="${y}" width="${anchoBarra}" height="${altoBarra}" fill="#2A9D8F" stroke="#FFFFFF" stroke-width="1.5"/>`;
 
-                ctx.strokeStyle = '#FFFFFF';
-                ctx.lineWidth = 1.5;
-                ctx.strokeRect(x, y, anchoBarra, altoBarra);
-
-                // Guardar punto central para polígono
                 const cx = x + anchoBarra / 2;
                 puntosPoligono.push({ x: cx, y: y, val: d.frecuencia });
 
-                // Títulos Eje X (Límites de intervalos)
-                ctx.fillStyle = '#333333';
-                ctx.textAlign = 'center';
-                ctx.fillText(fmtNum(d.li, 1), x, height - padding + 15);
+                // Etiquetas de límites en Eje X
+                svgContent += `<text x="${x}" y="${height - paddingBottom + 15}" fill="#333333" font-size="10" text-anchor="middle" font-family="Segoe UI">${fmtNum(d.li, 1)}</text>`;
                 if (i === numBarras - 1) {
-                    ctx.fillText(fmtNum(d.ls, 1), x + anchoBarra, height - padding + 15);
+                    svgContent += `<text x="${x + anchoBarra}" y="${height - paddingBottom + 15}" fill="#333333" font-size="10" text-anchor="middle" font-family="Segoe UI">${fmtNum(d.ls, 1)}</text>`;
                 }
             });
 
-            // Punto final polígono en 0
-            puntosPoligono.push({ x: padding + numBarras * anchoBarra, y: height - padding, val: 0 });
+            // Punto final del polígono
+            puntosPoligono.push({ x: paddingLeft + numBarras * anchoBarra, y: height - paddingBottom, val: 0 });
 
-            // Dibujar POLÍGONO DE FRECUENCIAS (Línea Ámbar)
-            ctx.beginPath();
-            ctx.strokeStyle = '#E9A23B';
-            ctx.lineWidth = 2.5;
+            // Dibujar Polígono de Frecuencias
+            let pointsAttr = puntosPoligono.map(pt => `${pt.x},${pt.y}`).join(' ');
+            svgContent += `<polyline points="${pointsAttr}" fill="none" stroke="#E9A23B" stroke-width="2.5"/>`;
 
-            puntosPoligono.forEach((pt, idx) => {
-                if (idx === 0) ctx.moveTo(pt.x, pt.y);
-                else ctx.lineTo(pt.x, pt.y);
-            });
-            ctx.stroke();
-
-            // Dibujar puntos del Polígono y etiquetas
+            // Puntos y números del polígono
             puntosPoligono.forEach((pt, idx) => {
                 if (idx > 0 && idx < puntosPoligono.length - 1) {
-                    ctx.beginPath();
-                    ctx.fillStyle = '#E9A23B';
-                    ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // Etiqueta del valor arriba
-                    ctx.fillStyle = '#1F3A5F';
-                    ctx.font = 'bold 11px Segoe UI';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(pt.val, pt.x, pt.y - 8);
+                    svgContent += `<circle cx="${pt.x}" cy="${pt.y}" r="4" fill="#E9A23B"/>`;
+                    svgContent += `<text x="${pt.x}" y="${pt.y - 8}" fill="#1F3A5F" font-size="11" font-weight="bold" text-anchor="middle" font-family="Segoe UI">${pt.val}</text>`;
                 }
             });
+
+            // Etiqueta Eje X
+            svgContent += `<text x="${paddingLeft + chartW / 2}" y="${height - 10}" fill="#1F3A5F" font-size="11" font-weight="bold" text-anchor="middle" font-family="Segoe UI">Intervalos de Clase</text>`;
+
+            svgContent += `</svg>`;
+            return svgContent;
         }
 
-        // Dibuja el DIAGRAMA DE CAJA Y BIGOTES (BOXPLOT)
-        function dibujarBoxplot(canvasId, min, Q1, Me, Q3, max, media, varNombre) {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
+        function generarSVGBoxplot(min, Q1, Me, Q3, max, media, varNombre) {
+            const width = 650;
+            const height = 180;
+            const paddingLeft = 50;
+            const paddingRight = 50;
+            const chartW = width - paddingLeft - paddingRight;
 
-            const width = canvas.width;
-            const height = canvas.height;
-            const padding = 50;
-
-            ctx.clearRect(0, 0, width, height);
-
-            // Título del diagrama
-            ctx.fillStyle = '#1F3A5F';
-            ctx.font = 'bold 12px Segoe UI';
-            ctx.textAlign = 'center';
-            ctx.fillText(`Diagrama de caja y bigotes · ${varNombre}`, width / 2, 20);
-
-            const chartWidth = width - 2 * padding;
             const rangoTotal = (max - min) === 0 ? 1 : (max - min);
 
             function toX(val) {
-                return padding + ((val - min) / rangoTotal) * chartWidth;
+                return paddingLeft + ((val - min) / rangoTotal) * chartW;
             }
 
             const xMin = toX(min);
@@ -1350,119 +1331,92 @@
             const xMax = toX(max);
             const xMedia = toX(media);
 
-            const boxY = 60;
+            const boxY = 55;
             const boxHeight = 50;
             const centerY = boxY + boxHeight / 2;
 
-            // Bigotes (Líneas horizontales)
-            ctx.beginPath();
-            ctx.strokeStyle = '#1F3A5F';
-            ctx.lineWidth = 2;
-            ctx.moveTo(xMin, centerY);
-            ctx.lineTo(xQ1, centerY);
-            ctx.moveTo(xQ3, centerY);
-            ctx.lineTo(xMax, centerY);
-            ctx.stroke();
+            let svgContent = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
 
-            // Topes de los bigotes (Líneas verticales Mín y Máx)
-            ctx.beginPath();
-            ctx.moveTo(xMin, centerY - 12);
-            ctx.lineTo(xMin, centerY + 12);
-            ctx.moveTo(xMax, centerY - 12);
-            ctx.lineTo(xMax, centerY + 12);
-            ctx.stroke();
+            // Título
+            svgContent += `<text x="${width / 2}" y="${20}" fill="#1F3A5F" font-size="12" font-weight="bold" text-anchor="middle" font-family="Segoe UI">Diagrama de caja y bigotes · ${varNombre}</text>`;
+
+            // Bigotes (Líneas horizontales)
+            svgContent += `<line x1="${xMin}" y1="${centerY}" x2="${xQ1}" y2="${centerY}" stroke="#1F3A5F" stroke-width="2"/>`;
+            svgContent += `<line x1="${xQ3}" y1="${centerY}" x2="${xMax}" y2="${centerY}" stroke="#1F3A5F" stroke-width="2"/>`;
+
+            // Topes Mín y Máx (Líneas verticales)
+            svgContent += `<line x1="${xMin}" y1="${centerY - 12}" x2="${xMin}" y2="${centerY + 12}" stroke="#1F3A5F" stroke-width="2"/>`;
+            svgContent += `<line x1="${xMax}" y1="${centerY - 12}" x2="${xMax}" y2="${centerY + 12}" stroke="#1F3A5F" stroke-width="2"/>`;
 
             // Caja (Q1 a Q3)
-            ctx.fillStyle = '#EBF5F5';
-            ctx.fillRect(xQ1, boxY, (xQ3 - xQ1) || 4, boxHeight);
+            const boxW = Math.max((xQ3 - xQ1), 4);
+            svgContent += `<rect x="${xQ1}" y="${boxY}" width="${boxW}" height="${boxHeight}" fill="#EBF5F5" stroke="#1F3A5F" stroke-width="2"/>`;
 
-            ctx.strokeStyle = '#1F3A5F';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(xQ1, boxY, (xQ3 - xQ1) || 4, boxHeight);
-
-            // Mediana (Línea vertical Ámbar dentro de la caja)
-            ctx.beginPath();
-            ctx.strokeStyle = '#E9A23B';
-            ctx.lineWidth = 3;
-            ctx.moveTo(xMe, boxY);
-            ctx.lineTo(xMe, boxY + boxHeight);
-            ctx.stroke();
+            // Mediana
+            svgContent += `<line x1="${xMe}" y1="${boxY}" x2="${xMe}" y2="${boxY + boxHeight}" stroke="#E9A23B" stroke-width="3"/>`;
 
             // Media (Punto Rojo)
-            ctx.beginPath();
-            ctx.fillStyle = '#C0392B';
-            ctx.arc(xMedia, centerY, 5, 0, Math.PI * 2);
-            ctx.fill();
+            svgContent += `<circle cx="${xMedia}" cy="${centerY}" r="5" fill="#C0392B"/>`;
 
-            // Etiqueta x̄ Media arriba
-            ctx.fillStyle = '#C0392B';
-            ctx.font = 'bold 11px Segoe UI';
-            ctx.textAlign = 'center';
-            ctx.fillText(`x̄ = ${fmtNum(media, 2)}`, xMedia, boxY - 8);
+            // Etiqueta x̄
+            svgContent += `<text x="${xMedia}" y="${boxY - 8}" fill="#C0392B" font-size="11" font-weight="bold" text-anchor="middle" font-family="Segoe UI">x̄ = ${fmtNum(media, 2)}</text>`;
 
-            // Etiquetas de Mín, Q1, Me, Q3, Máx abajo
-            ctx.fillStyle = '#333333';
-            ctx.font = '10px Segoe UI';
-            
-            ctx.fillText(`Mín: ${fmtNum(min, 1)}`, xMin, boxY + boxHeight + 20);
-            ctx.fillText(`Q1: ${fmtNum(Q1, 2)}`, xQ1, boxY + boxHeight + 20);
-            ctx.fillText(`Me: ${fmtNum(Me, 2)}`, xMe, boxY + boxHeight + 35);
-            ctx.fillText(`Q3: ${fmtNum(Q3, 2)}`, xQ3, boxY + boxHeight + 20);
-            ctx.fillText(`Máx: ${fmtNum(max, 1)}`, xMax, boxY + boxHeight + 20);
+            // Etiquetas Mín, Q1, Me, Q3, Máx
+            svgContent += `<text x="${xMin}" y="${boxY + boxHeight + 20}" fill="#333333" font-size="10" text-anchor="middle" font-family="Segoe UI">Mín: ${fmtNum(min, 1)}</text>`;
+            svgContent += `<text x="${xQ1}" y="${boxY + boxHeight + 20}" fill="#333333" font-size="10" text-anchor="middle" font-family="Segoe UI">Q1: ${fmtNum(Q1, 2)}</text>`;
+            svgContent += `<text x="${xMe}" y="${boxY + boxHeight + 35}" fill="#333333" font-size="10" text-anchor="middle" font-family="Segoe UI">Me: ${fmtNum(Me, 2)}</text>`;
+            svgContent += `<text x="${xQ3}" y="${boxY + boxHeight + 20}" fill="#333333" font-size="10" text-anchor="middle" font-family="Segoe UI">Q3: ${fmtNum(Q3, 2)}</text>`;
+            svgContent += `<text x="${xMax}" y="${boxY + boxHeight + 20}" fill="#333333" font-size="10" text-anchor="middle" font-family="Segoe UI">Máx: ${fmtNum(max, 1)}</text>`;
+
+            svgContent += `</svg>`;
+            return svgContent;
         }
 
-        // Dibuja el DIAGRAMA DE BARRAS HORIZONTAL MULTICOLOR
-        function dibujarBarrasHorizontal(canvasId, datos, totalN) {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
+        function generarSVGBarrasHorizontal(datos) {
+            if (!datos || datos.length === 0) return '';
 
-            const width = canvas.width;
-            const height = canvas.height;
-            const paddingLeft = 130;
-            const paddingRight = 90;
+            const width = 650;
+            const numBarras = datos.length;
+            const altoEspacio = 45;
             const paddingTop = 20;
             const paddingBottom = 20;
+            const height = Math.max(220, paddingTop + paddingBottom + numBarras * altoEspacio);
 
-            ctx.clearRect(0, 0, width, height);
-            if (datos.length === 0) return;
+            const paddingLeft = 140;
+            const paddingRight = 100;
+            const chartW = width - paddingLeft - paddingRight;
 
             const paletaColores = [
                 '#2A9D8F', '#E9A23B', '#9B59B6', '#3498DB', 
                 '#E67E22', '#27AE60', '#E74C3C', '#1F3A5F'
             ];
 
-            const chartWidth = width - paddingLeft - paddingRight;
-            const numBarras = datos.length;
-            const altoEspacio = (height - paddingTop - paddingBottom) / numBarras;
-            const altoBarra = Math.min(26, altoEspacio * 0.65);
-
             const maxFrec = Math.max(...datos.map(d => d.frecuencia), 1);
+
+            let svgContent = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
+
+            const altoBarra = Math.min(26, altoEspacio * 0.65);
 
             datos.forEach((d, i) => {
                 const y = paddingTop + i * altoEspacio + (altoEspacio - altoBarra) / 2;
-                const anchoBarra = (d.frecuencia / maxFrec) * chartWidth;
+                const anchoBarra = (d.frecuencia / maxFrec) * chartW;
+                const color = paletaColores[i % paletaColores.length];
 
-                // Dibujar Barra
-                ctx.fillStyle = paletaColores[i % paletaColores.length];
-                ctx.fillRect(paddingLeft, y, anchoBarra, altoBarra);
+                // Barra
+                svgContent += `<rect x="${paddingLeft}" y="${y}" width="${anchoBarra}" height="${altoBarra}" fill="${color}" rx="3"/>`;
 
-                // Etiqueta Categoría a la izquierda
-                ctx.fillStyle = '#333333';
-                ctx.font = '11px Segoe UI';
-                ctx.textAlign = 'right';
-                
+                // Etiqueta Categoría
                 let lbl = d.etiqueta;
-                if (lbl.length > 18) lbl = lbl.substring(0, 16) + '...';
-                ctx.fillText(lbl, paddingLeft - 10, y + altoBarra / 2 + 4);
+                if (lbl.length > 20) lbl = lbl.substring(0, 18) + '...';
+                svgContent += `<text x="${paddingLeft - 10}" y="${y + altoBarra / 2 + 4}" fill="#333333" font-size="11" text-anchor="end" font-family="Segoe UI">${lbl}</text>`;
 
-                // Texto con fi y porcentaje fi (%): ej: 13 (21.67 %)
-                ctx.fillStyle = '#1F3A5F';
-                ctx.font = 'bold 11px Segoe UI';
-                ctx.textAlign = 'left';
+                // Frecuencia y porcentaje
                 const txt = `${d.frecuencia} (${fmtNum(d.porcentaje, 2)} %)`;
-                ctx.fillText(txt, paddingLeft + anchoBarra + 8, y + altoBarra / 2 + 4);
+                svgContent += `<text x="${paddingLeft + anchoBarra + 8}" y="${y + altoBarra / 2 + 4}" fill="#1F3A5F" font-size="11" font-weight="bold" text-anchor="start" font-family="Segoe UI">${txt}</text>`;
             });
+
+            svgContent += `</svg>`;
+            return svgContent;
         }
 
         window.onload = function() {
