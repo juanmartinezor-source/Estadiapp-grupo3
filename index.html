@@ -246,6 +246,7 @@
             overflow-x: auto;
             border: 1px solid #E0E0E0;
             border-radius: var(--border-radius);
+            margin-bottom: 20px;
         }
 
         table {
@@ -283,6 +284,38 @@
 
         .btn-delete:hover {
             background-color: #C0392B;
+        }
+
+        /* Estilos Pestaña Análisis */
+        .section-title {
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin: 20px 0 10px 0;
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 5px;
+        }
+
+        .filter-card {
+            background-color: #F8F9FA;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            border: 1px solid #E0E0E0;
+            margin-bottom: 20px;
+        }
+
+        .formula-text {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        .info-card {
+            padding: 15px;
+            background-color: #EBF5F5;
+            border-left: 4px solid var(--secondary);
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -434,9 +467,51 @@
 
         <!-- PESTAÑA ANÁLISIS -->
         <div id="analisis" class="tab-content">
-            <div class="under-construction">
-                <h3>En construcción</h3>
-                <p>Módulo de análisis estadístico en desarrollo.</p>
+            <div class="filter-card">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="analisisVariable">Seleccionar Variable a Analizar:</label>
+                        <select id="analisisVariable" onchange="ejecutarAnalisis()">
+                            <optgroup label="Cuantitativas">
+                                <option value="limpiezaNum">Percepción de limpieza y aseo (1 a 5)</option>
+                                <option value="insumosNum">Disponibilidad de insumos (1 a 5)</option>
+                            </optgroup>
+                            <optgroup label="Cualitativas">
+                                <option value="franjaHoraria">Franja horaria</option>
+                                <option value="piso">Piso del edificio</option>
+                                <option value="ubicacion">Ubicación del baño</option>
+                                <option value="tipoBano">Tipo de baño</option>
+                                <option value="limpieza">Percepción de limpieza (Categoría)</option>
+                                <option value="insumos">Disponibilidad de insumos (Categoría)</option>
+                                <option value="frecuenciaPersonal">Frecuencia personal de aseo</option>
+                                <option value="infraestructura">Estado infraestructura y grifería</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="filtroVariable">Filtro Opcional (Variable Cualitativa):</label>
+                        <select id="filtroVariable" onchange="actualizarOpcionesFiltro()">
+                            <option value="">-- Sin Filtro --</option>
+                            <option value="franjaHoraria">Franja horaria</option>
+                            <option value="piso">Piso del edificio</option>
+                            <option value="ubicacion">Ubicación del baño</option>
+                            <option value="tipoBano">Tipo de baño</option>
+                            <option value="frecuenciaPersonal">Frecuencia personal de aseo</option>
+                            <option value="infraestructura">Estado infraestructura</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="grupoFiltroValor" style="display: none;">
+                        <label for="filtroValor">Valor del Filtro:</label>
+                        <select id="filtroValor" onchange="ejecutarAnalisis()">
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="contenedorAnalisis">
+                <!-- Se llena dinámicamente mediante JS -->
             </div>
         </div>
 
@@ -471,7 +546,14 @@
             buttons.forEach(btn => btn.classList.remove('active'));
             
             document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            
+            // Buscar el botón correspondiente para marcarlo activo
+            const activeBtn = Array.from(buttons).find(b => b.getAttribute('onclick').includes(tabId));
+            if(activeBtn) activeBtn.classList.add('active');
+
+            if (tabId === 'analisis') {
+                ejecutarAnalisis();
+            }
         }
 
         // Establecer fecha y hora actual en el campo de entrada
@@ -590,14 +672,12 @@
 
         // --- FUNCIONES DE EXPORTACIÓN E IMPORTACIÓN ---
 
-        // Helper para escapar valores en el CSV
         function formatearValorCSV(val) {
             if (val === null || val === undefined) return '""';
             let str = String(val).replace(/"/g, '""');
             return `"${str}"`;
         }
 
-        // Exportar a CSV (Separador ; | UTF-8 BOM | Coma decimal)
         function exportarCSV() {
             if (registros.length === 0) {
                 mostrarAlerta('No hay registros guardados para exportar.', true);
@@ -622,18 +702,15 @@
             registros.forEach(reg => {
                 const fObj = new Date(reg.fechaHora);
                 
-                // Extraer Fecha en formato YYYY-MM-DD
                 const anio = fObj.getFullYear();
                 const mes = String(fObj.getMonth() + 1).padStart(2, '0');
                 const dia = String(fObj.getDate()).padStart(2, '0');
                 const fechaStr = `${anio}-${mes}-${dia}`;
 
-                // Extraer Hora en formato HH:MM
                 const horas = String(fObj.getHours()).padStart(2, '0');
                 const minutos = String(fObj.getMinutes()).padStart(2, '0');
                 const horaStr = `${horas}:${minutos}`;
 
-                // Formatear decimales en caso de existir con coma (es-CO)
                 const limpiezaVal = reg.limpieza ? reg.limpieza.replace('.', ',') : '';
                 const insumosVal = reg.insumos ? reg.insumos.replace('.', ',') : '';
 
@@ -653,7 +730,6 @@
                 csvContent += fila.join(";") + "\r\n";
             });
 
-            // BOM UTF-8 (\uFEFF) para correcta apertura en Excel
             const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
@@ -664,7 +740,6 @@
             document.body.removeChild(link);
         }
 
-        // Importar CSV y unir con los existentes
         function importarCSV(event) {
             const archivo = event.target.files[0];
             if (!archivo) return;
@@ -679,7 +754,6 @@
                     return;
                 }
 
-                // Función auxiliar para parsear líneas de CSV respetando comillas y delimitador ';'
                 function parsearLineaCSV(linea) {
                     const resultado = [];
                     let campoActual = '';
@@ -720,7 +794,6 @@
 
                 const encabezadosObtenidos = parsearLineaCSV(lineas[0]);
 
-                // Validar si las columnas coinciden
                 const coinciden = encabezadosEsperados.length === encabezadosObtenidos.length &&
                     encabezadosEsperados.every((val, idx) => val === encabezadosObtenidos[idx]);
 
@@ -765,7 +838,6 @@
             lector.readAsText(archivo, 'UTF-8');
         }
 
-        // Descargar Respaldo JSON
         function descargarRespaldoJSON() {
             if (registros.length === 0) {
                 mostrarAlerta('No hay datos para realizar el respaldo.', true);
@@ -781,7 +853,6 @@
             downloadAnchor.remove();
         }
 
-        // Restaurar Respaldo JSON
         function restaurarRespaldoJSON(event) {
             const archivo = event.target.files[0];
             if (!archivo) return;
@@ -805,6 +876,405 @@
             };
 
             lector.readAsText(archivo);
+        }
+
+        // =========================================================================
+        // PESTAÑA ANÁLISIS ESTADÍSTICO
+        // =========================================================================
+
+        // Formato con coma decimal (Colombia)
+        function fmtNum(val, dec = 2) {
+            if (val === null || val === undefined || isNaN(val)) return '-';
+            return val.toLocaleString('es-CO', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+        }
+
+        // Actualiza las opciones del desplegable secundario de filtro
+        function actualizarOpcionesFiltro() {
+            const filtroVar = document.getElementById('filtroVariable').value;
+            const grupo = document.getElementById('grupoFiltroValor');
+            const selectVal = document.getElementById('filtroValor');
+
+            selectVal.innerHTML = '';
+
+            if (!filtroVar) {
+                grupo.style.display = 'none';
+                ejecutarAnalisis();
+                return;
+            }
+
+            grupo.style.display = 'flex';
+            
+            // Extraer categorías únicas
+            const opciones = [...new Set(registros.map(r => r[filtroVar]).filter(Boolean))].sort();
+            opciones.forEach(op => {
+                const optElem = document.createElement('option');
+                optElem.value = op;
+                optElem.textContent = op;
+                selectVal.appendChild(optElem);
+            });
+
+            ejecutarAnalisis();
+        }
+
+        // Función principal de cálculo del módulo de análisis
+        function ejecutarAnalisis() {
+            const varSeleccionada = document.getElementById('analisisVariable').value;
+            const filtroVar = document.getElementById('filtroVariable').value;
+            const filtroVal = document.getElementById('filtroValor').value;
+            const contenedor = document.getElementById('contenedorAnalisis');
+
+            // Filtrar conjunto de datos
+            let datosFiltrados = [...registros];
+            if (filtroVar && filtroVal) {
+                datosFiltrados = datosFiltrados.filter(r => r[filtroVar] === filtroVal);
+            }
+
+            if (datosFiltrados.length === 0) {
+                contenedor.innerHTML = `<div class="info-card">No hay registros disponibles para el análisis seleccionado.</div>`;
+                return;
+            }
+
+            const esCuantitativa = (varSeleccionada === 'limpiezaNum' || varSeleccionada === 'insumosNum');
+
+            if (esCuantitativa) {
+                analizarCuantitativa(varSeleccionada, datosFiltrados, contenedor);
+            } else {
+                analizarCualitativa(varSeleccionada, datosFiltrados, contenedor);
+            }
+        }
+
+        // Método CUARTIL.INC de Excel
+        function calcularCuartilINC(arr, q) {
+            if (arr.length === 0) return 0;
+            if (arr.length === 1) return arr[0];
+
+            const n = arr.length;
+            const pos = (n - 1) * q;
+            const base = Math.floor(pos);
+            const rest = pos - base;
+
+            if (base + 1 < n) {
+                return arr[base] + rest * (arr[base + 1] - arr[base]);
+            } else {
+                return arr[base];
+            }
+        }
+
+        // Análisis para Variables Cuantitativas
+        function analizarCuantitativa(varKey, datos, contenedor) {
+            // Extraer el entero inicial del campo ordinal (ej: "4 - Bueno" -> 4)
+            const attrOriginal = varKey === 'limpiezaNum' ? 'limpieza' : 'insumos';
+            const valores = datos
+                .map(r => {
+                    const match = String(r[attrOriginal]).match(/^(\d+)/);
+                    return match ? parseFloat(match[1]) : null;
+                })
+                .filter(v => v !== null)
+                .sort((a, b) => a - b);
+
+            const n = valores.length;
+            if (n === 0) {
+                contenedor.innerHTML = `<div class="info-card">No hay valores numéricos suficientes para el análisis.</div>`;
+                return;
+            }
+
+            // Suma
+            const suma = valores.reduce((acc, v) => acc + v, 0);
+
+            // Media
+            const media = suma / n;
+
+            // Mediana
+            let mediana = 0;
+            if (n % 2 === 0) {
+                mediana = (valores[n / 2 - 1] + valores[n / 2]) / 2;
+            } else {
+                mediana = valores[Math.floor(n / 2)];
+            }
+
+            // Moda
+            const frecs = {};
+            valores.forEach(v => frecs[v] = (frecs[v] || 0) + 1);
+            let maxFrec = 0;
+            for (let k in frecs) {
+                if (frecs[k] > maxFrec) maxFrec = frecs[k];
+            }
+
+            let textoModa = '';
+            if (maxFrec === 1) {
+                textoModa = 'No hay moda';
+            } else {
+                const modas = Object.keys(frecs).filter(k => frecs[k] === maxFrec);
+                textoModa = modas.map(v => fmtNum(parseFloat(v), 0)).join(', ');
+            }
+
+            // Mínimo, Máximo, Rango
+            const min = valores[0];
+            const max = valores[n - 1];
+            const rango = max - min;
+
+            // Varianza Muestral (s²) y Desviación Estándar Muestral (s)
+            let varianza = 0;
+            let desviacion = 0;
+            if (n > 1) {
+                const sumaCuadrados = valores.reduce((acc, v) => acc + Math.pow(v - media, 2), 0);
+                varianza = sumaCuadrados / (n - 1);
+                desviacion = Math.sqrt(varianza);
+            }
+
+            // Coeficiente de variación (CV %)
+            const cv = media !== 0 ? (desviacion / media) * 100 : 0;
+
+            // Cuartiles (CUARTIL.INC) y RIC
+            const Q1 = calcularCuartilINC(valores, 0.25);
+            const Q2 = calcularCuartilINC(valores, 0.50);
+            const Q3 = calcularCuartilINC(valores, 0.75);
+            const RIC = Q3 - Q1;
+
+            // Construcción HTML Tabla Descriptiva
+            let html = `
+                <h3 class="section-title">Medidas Descriptivas Muestrales</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Medida Estadística</th>
+                                <th>Símbolo / Fórmula</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Tamaño de la muestra</td>
+                                <td class="formula-text">n</td>
+                                <td>${n}</td>
+                            </tr>
+                            <tr>
+                                <td>Suma total</td>
+                                <td class="formula-text">∑ xᵢ</td>
+                                <td>${fmtNum(suma, 2)}</td>
+                            </tr>
+                            <tr>
+                                <td>Media aritmética</td>
+                                <td class="formula-text">x̄ = (∑ xᵢ) / n</td>
+                                <td><strong>${fmtNum(media, 2)}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Mediana</td>
+                                <td class="formula-text">Me (Posición central)</td>
+                                <td>${fmtNum(mediana, 2)}</td>
+                            </tr>
+                            <tr>
+                                <td>Moda</td>
+                                <td class="formula-text">Mo (Mayor frecuencia)</td>
+                                <td>${textoModa}</td>
+                            </tr>
+                            <tr>
+                                <td>Mínimo</td>
+                                <td class="formula-text">Min</td>
+                                <td>${fmtNum(min, 0)}</td>
+                            </tr>
+                            <tr>
+                                <td>Máximo</td>
+                                <td class="formula-text">Max</td>
+                                <td>${fmtNum(max, 0)}</td>
+                            </tr>
+                            <tr>
+                                <td>Rango</td>
+                                <td class="formula-text">R = Max − Min</td>
+                                <td>${fmtNum(rango, 0)}</td>
+                            </tr>
+                            <tr>
+                                <td>Varianza Muestral</td>
+                                <td class="formula-text">s² = ∑(xᵢ − x̄)² / (n − 1)</td>
+                                <td>${fmtNum(varianza, 4)}</td>
+                            </tr>
+                            <tr>
+                                <td>Desviación Estándar Muestral</td>
+                                <td class="formula-text">s = √s²</td>
+                                <td>${fmtNum(desviacion, 4)}</td>
+                            </tr>
+                            <tr>
+                                <td>Coeficiente de Variación</td>
+                                <td class="formula-text">CV = (s / x̄) × 100%</td>
+                                <td>${fmtNum(cv, 2)}%</td>
+                            </tr>
+                            <tr>
+                                <td>Cuartil 1 (Q1)</td>
+                                <td class="formula-text">CUARTIL.INC (25%)</td>
+                                <td>${fmtNum(Q1, 2)}</td>
+                            </tr>
+                            <tr>
+                                <td>Cuartil 2 (Q2)</td>
+                                <td class="formula-text">CUARTIL.INC (50%)</td>
+                                <td>${fmtNum(Q2, 2)}</td>
+                            </tr>
+                            <tr>
+                                <td>Cuartil 3 (Q3)</td>
+                                <td class="formula-text">CUARTIL.INC (75%)</td>
+                                <td>${fmtNum(Q3, 2)}</td>
+                            </tr>
+                            <tr>
+                                <td>Rango Intercuartílico</td>
+                                <td class="formula-text">RIC = Q3 − Q1</td>
+                                <td>${fmtNum(RIC, 2)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Tabla de Frecuencias para Datos Agrupados (Sturges)
+            let k = Math.round(1 + 3.322 * Math.log10(n));
+            if (k < 1) k = 1;
+
+            // Amplitud A = rango / k, redondeada hacia arriba a enteros
+            let amplitud = rango === 0 ? 1 : Math.ceil(rango / k);
+            if (amplitud === 0) amplitud = 1;
+
+            html += `
+                <h3 class="section-title">Tabla de Frecuencias Agrupadas (Regla de Sturges)</h3>
+                <div class="info-card">
+                    Número de clases (k) = 1 + 3,322 · log₁₀(${n}) = <strong>${k}</strong> | Amplitud (A) = R / k = <strong>${amplitud}</strong>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Clase</th>
+                                <th>Intervalo [Lᵢ, Lₛ)</th>
+                                <th>Marca (xᵢ)</th>
+                                <th>fᵢ</th>
+                                <th>Fᵢ</th>
+                                <th>hᵢ</th>
+                                <th>Hᵢ</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            let li = min;
+            let Fi = 0;
+            let Hi = 0;
+
+            for (let i = 0; i < k; i++) {
+                let ls = li + amplitud;
+                const esUltima = (i === k - 1);
+
+                // Conteo fi
+                const fi = valores.filter(v => {
+                    if (esUltima) {
+                        return v >= li && v <= ls;
+                    }
+                    return v >= li && v < ls;
+                }).length;
+
+                Fi += fi;
+                const hi = fi / n;
+                Hi += hi;
+                const porcentaje = hi * 100;
+                const marca = (li + ls) / 2;
+
+                const formatoIntervalo = esUltima ? `[${fmtNum(li, 0)}, ${fmtNum(ls, 0)}]` : `[${fmtNum(li, 0)}, ${fmtNum(ls, 0)})`;
+
+                html += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${formatoIntervalo}</td>
+                        <td>${fmtNum(marca, 1)}</td>
+                        <td>${fi}</td>
+                        <td>${Fi}</td>
+                        <td>${fmtNum(hi, 4)}</td>
+                        <td>${fmtNum(Hi, 4)}</td>
+                        <td>${fmtNum(porcentaje, 2)}%</td>
+                    </tr>
+                `;
+
+                li = ls;
+            }
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            contenedor.innerHTML = html;
+        }
+
+        // Análisis para Variables Cualitativas
+        function analizarCualitativa(varKey, datos, contenedor) {
+            const valores = datos.map(r => r[varKey]).filter(Boolean);
+            const n = valores.length;
+
+            if (n === 0) {
+                contenedor.innerHTML = `<div class="info-card">No hay datos suficientes para el análisis cualitativo.</div>`;
+                return;
+            }
+
+            // Calcular Frecuencias Absolutas (fi)
+            const conteos = {};
+            valores.forEach(v => conteos[v] = (conteos[v] || 0) + 1);
+
+            const categorias = Object.keys(conteos).sort();
+
+            let html = `
+                <h3 class="section-title">Tabla de Frecuencias Cualitativa</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Categoría</th>
+                                <th>Frecuencia Absoluta (fᵢ)</th>
+                                <th>Frecuencia Acumulada (Fᵢ)</th>
+                                <th>Frecuencia Relativa (hᵢ)</th>
+                                <th>Frec. Relativa Acum. (Hᵢ)</th>
+                                <th>Porcentaje (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            let Fi = 0;
+            let Hi = 0;
+
+            categorias.forEach(cat => {
+                const fi = conteos[cat];
+                Fi += fi;
+                const hi = fi / n;
+                Hi += hi;
+                const porcentaje = hi * 100;
+
+                html += `
+                    <tr>
+                        <td><strong>${cat}</strong></td>
+                        <td>${fi}</td>
+                        <td>${Fi}</td>
+                        <td>${fmtNum(hi, 4)}</td>
+                        <td>${fmtNum(Hi, 4)}</td>
+                        <td>${fmtNum(porcentaje, 2)}%</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                        <tfoot>
+                            <tr style="font-weight: bold; background-color: #EBF5F5;">
+                                <td>TOTAL</td>
+                                <td>${n}</td>
+                                <td>-</td>
+                                <td>1,0000</td>
+                                <td>-</td>
+                                <td>100,00%</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+
+            contenedor.innerHTML = html;
         }
 
         // Inicialización al cargar la página
