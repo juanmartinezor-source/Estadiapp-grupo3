@@ -210,25 +210,10 @@
             opacity: 0.9;
         }
 
-        .btn-csv-export {
-            background-color: var(--secondary);
-            color: #FFFFFF;
-        }
-
-        .btn-csv-import {
-            background-color: #34495E;
-            color: #FFFFFF;
-        }
-
-        .btn-json-export {
-            background-color: var(--accent);
-            color: #FFFFFF;
-        }
-
-        .btn-json-import {
-            background-color: #7F8C8D;
-            color: #FFFFFF;
-        }
+        .btn-csv-export { background-color: var(--secondary); color: #FFFFFF; }
+        .btn-csv-import { background-color: #34495E; color: #FFFFFF; }
+        .btn-json-export { background-color: var(--accent); color: #FFFFFF; }
+        .btn-json-import { background-color: #7F8C8D; color: #FFFFFF; }
 
         .counter-box {
             margin: 25px 0 15px 0;
@@ -267,9 +252,7 @@
             font-weight: 600;
         }
 
-        tr:nth-child(even) {
-            background-color: #F8F9FA;
-        }
+        tr:nth-child(even) { background-color: #F8F9FA; }
 
         .btn-delete {
             background-color: var(--danger);
@@ -281,9 +264,7 @@
             font-size: 0.8rem;
         }
 
-        .btn-delete:hover {
-            background-color: #C0392B;
-        }
+        .btn-delete:hover { background-color: #C0392B; }
 
         .section-title {
             color: var(--primary);
@@ -309,11 +290,12 @@
 
         .info-card {
             padding: 15px;
-            background-color: #EBF5F5;
-            border-left: 4px solid var(--secondary);
-            border-radius: 4px;
-            margin-bottom: 15px;
+            background-color: #E2F0D9;
+            border: 1px solid #C5E0B4;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
             font-size: 0.9rem;
+            color: #274E13;
         }
 
         .chart-container {
@@ -329,6 +311,13 @@
         canvas {
             max-width: 100%;
             height: auto;
+        }
+
+        .chart-caption {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 8px;
+            font-style: italic;
         }
     </style>
 </head>
@@ -909,7 +898,7 @@
             }
 
             if (datosFiltrados.length === 0) {
-                contenedor.innerHTML = `<div class="info-card">No hay registros disponibles para el análisis seleccionado.</div>`;
+                contenedor.innerHTML = `<div class="info-card" style="background-color: #FFF3CD; border-color: #FFEBAA; color: #856404;">No hay registros disponibles para el análisis seleccionado.</div>`;
                 return;
             }
 
@@ -940,6 +929,8 @@
 
         function analizarCuantitativa(varKey, datos, contenedor) {
             const attrOriginal = varKey === 'limpiezaNum' ? 'limpieza' : 'insumos';
+            const nombreVarTxt = varKey === 'limpiezaNum' ? 'Percepción de limpieza y aseo (1 a 5)' : 'Disponibilidad de insumos (1 a 5)';
+            
             const valores = datos
                 .map(r => {
                     const match = String(r[attrOriginal]).match(/^(\d+)/);
@@ -950,7 +941,7 @@
 
             const n = valores.length;
             if (n === 0) {
-                contenedor.innerHTML = `<div class="info-card">No hay valores numéricos suficientes para el análisis.</div>`;
+                contenedor.innerHTML = `<div class="info-card" style="background-color: #FFF3CD; border-color: #FFEBAA; color: #856404;">No hay valores numéricos suficientes para el análisis.</div>`;
                 return;
             }
 
@@ -1037,7 +1028,7 @@
 
             html += `
                 <h3 class="section-title">Tabla de Frecuencias Agrupadas (Regla de Sturges)</h3>
-                <div class="info-card">
+                <div class="info-card" style="background-color: #EBF5F5; border-color: #2A9D8F; color: #1F3A5F;">
                     Número de clases (k) = 1 + 3,322 · log₁₀(${n}) = <strong>${k}</strong> | Amplitud (A) = R / k = <strong>${amplitud}</strong>
                 </div>
                 <div class="table-responsive">
@@ -1078,7 +1069,7 @@
                 const marca = (li + ls) / 2;
                 const formatoIntervalo = esUltima ? `[${fmtNum(li, 0)}, ${fmtNum(ls, 0)}]` : `[${fmtNum(li, 0)}, ${fmtNum(ls, 0)})`;
 
-                datosGraficoHist.push({ etiqueta: formatoIntervalo, frecuencia: fi });
+                datosGraficoHist.push({ etiqueta: formatoIntervalo, frecuencia: fi, marca: marca, li: li, ls: ls });
 
                 html += `
                     <tr>
@@ -1101,14 +1092,41 @@
                     </table>
                 </div>
 
-                <h3 class="section-title">Histograma de Frecuencias</h3>
+                <h3 class="section-title">Histograma de Frecuencias y Polígono</h3>
                 <div class="chart-container">
-                    <canvas id="canvasHistograma" width="600" height="300"></canvas>
+                    <canvas id="canvasHistograma" width="650" height="320"></canvas>
+                    <div class="chart-caption">Intervalos de clase · barras = histograma, línea = polígono de frecuencias</div>
+                </div>
+
+                <h3 class="section-title">Diagrama de Caja y Bigotes (Boxplot)</h3>
+                <div class="chart-container">
+                    <canvas id="canvasBoxplot" width="650" height="180"></canvas>
+                </div>
+            `;
+
+            // LECTURA AUTOMÁTICA
+            let sesgoTxt = "";
+            if (Math.abs(media - mediana) < 0.05) {
+                sesgoTxt = "La distribución es aproximadamente simétrica (media ≈ mediana).";
+            } else if (media > mediana) {
+                sesgoTxt = "La distribución es con sesgo positivo, hacia la derecha (media > mediana): hay algunos valores altos que jalan el promedio.";
+            } else {
+                sesgoTxt = "La distribución es con sesgo negativo, hacia la izquierda (media < mediana): hay algunos valores bajos que jalan el promedio.";
+            }
+
+            let dispTxt = cv >= 30 ? `es decir, los datos son muy dispersos (CV ≥ 30%): el promedio solo no describe bien el proceso.` : `es decir, los datos son homogéneos (CV < 30%).`;
+
+            html += `
+                <div class="info-card">
+                    <strong>Lectura automática (comprruébenla y amplíenla):</strong> con ${n} datos, el valor promedio de «${nombreVarTxt}» es ${fmtNum(media, 2)} y la mitad de los datos está por debajo de ${fmtNum(mediana, 2)}. ${sesgoTxt} La desviación estándar es ${fmtNum(desviacion, 2)} y el CV es ${fmtNum(cv, 2)} %, ${dispTxt} El 50 % central de los datos está entre ${fmtNum(Q1, 2)} y ${fmtNum(Q3, 2)}.
                 </div>
             `;
 
             contenedor.innerHTML = html;
-            dibujarGraficoBarras('canvasHistograma', datosGraficoHist, true);
+            
+            // DIBUJAR GRÁFICOS
+            dibujarHistogramaConPoligono('canvasHistograma', datosGraficoHist);
+            dibujarBoxplot('canvasBoxplot', min, Q1, mediana, Q3, max, media, nombreVarTxt);
         }
 
         function analizarCualitativa(varKey, datos, contenedor) {
@@ -1116,7 +1134,7 @@
             const n = valores.length;
 
             if (n === 0) {
-                contenedor.innerHTML = `<div class="info-card">No hay datos suficientes para el análisis cualitativo.</div>`;
+                contenedor.innerHTML = `<div class="info-card" style="background-color: #FFF3CD; border-color: #FFEBAA; color: #856404;">No hay datos suficientes para el análisis cualitativo.</div>`;
                 return;
             }
 
@@ -1152,7 +1170,7 @@
                 Hi += hi;
                 const porcentaje = hi * 100;
 
-                datosGraficoBarras.push({ etiqueta: cat, frecuencia: fi });
+                datosGraficoBarras.push({ etiqueta: cat, frecuencia: fi, porcentaje: porcentaje });
 
                 html += `
                     <tr>
@@ -1181,17 +1199,18 @@
                     </table>
                 </div>
 
-                <h3 class="section-title">Diagrama de Barras</h3>
+                <h3 class="section-title">Diagrama de Barras Horizontal</h3>
                 <div class="chart-container">
-                    <canvas id="canvasBarras" width="600" height="300"></canvas>
+                    <canvas id="canvasBarrasHorizontal" width="650" height="${Math.max(220, categorias.length * 45)}"></canvas>
                 </div>
             `;
 
             contenedor.innerHTML = html;
-            dibujarGraficoBarras('canvasBarras', datosGraficoBarras, false);
+            dibujarBarrasHorizontal('canvasBarrasHorizontal', datosGraficoBarras, n);
         }
 
-        function dibujarGraficoBarras(canvasId, datos, esHistograma = false) {
+        // Dibuja el HISTOGRAMA + POLÍGONO DE FRECUENCIAS
+        function dibujarHistogramaConPoligono(canvasId, datos) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
@@ -1203,48 +1222,246 @@
             ctx.clearRect(0, 0, width, height);
             if (datos.length === 0) return;
 
-            const maxVal = Math.max(...datos.map(d => d.frecuencia), 1);
+            const maxFrec = Math.max(...datos.map(d => d.frecuencia), 1);
             
+            // Eje X e Y
             ctx.beginPath();
             ctx.strokeStyle = '#1F3A5F';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1.5;
             ctx.moveTo(padding, height - padding);
             ctx.lineTo(width - padding, height - padding);
             ctx.moveTo(padding, height - padding);
             ctx.lineTo(padding, padding / 2);
             ctx.stroke();
 
+            // Marcas Eje Y (Frecuencias)
+            ctx.fillStyle = '#666';
+            ctx.font = '10px Segoe UI';
+            ctx.textAlign = 'right';
+            const pasosY = Math.min(maxFrec, 5);
+            for (let i = 0; i <= pasosY; i++) {
+                const val = Math.round((maxFrec / pasosY) * i);
+                const yPos = height - padding - ((yVal = (val / maxFrec) * (height - 1.5 * padding)));
+                ctx.fillText(val, padding - 8, yPos + 3);
+                
+                ctx.beginPath();
+                ctx.strokeStyle = '#F0F0F0';
+                ctx.moveTo(padding, yPos);
+                ctx.lineTo(width - padding, yPos);
+                ctx.stroke();
+            }
+
             const chartWidth = width - 2 * padding;
             const chartHeight = height - 1.5 * padding;
             const numBarras = datos.length;
+            const anchoBarra = chartWidth / numBarras;
 
-            const anchoEspacio = chartWidth / numBarras;
-            const anchoBarra = esHistograma ? anchoEspacio : anchoEspacio * 0.6;
+            const puntosPoligono = [];
 
+            // Punto inicial polígono en 0
+            puntosPoligono.push({ x: padding, y: height - padding, val: 0 });
+
+            // Dibujar Barras del Histograma
             datos.forEach((d, i) => {
-                const altoBarra = (d.frecuencia / maxVal) * chartHeight;
-                const x = esHistograma 
-                    ? padding + i * anchoEspacio 
-                    : padding + i * anchoEspacio + (anchoEspacio - anchoBarra) / 2;
+                const altoBarra = (d.frecuencia / maxFrec) * chartHeight;
+                const x = padding + i * anchoBarra;
                 const y = height - padding - altoBarra;
 
                 ctx.fillStyle = '#2A9D8F';
                 ctx.fillRect(x, y, anchoBarra, altoBarra);
 
-                ctx.strokeStyle = '#1F3A5F';
-                ctx.lineWidth = 1;
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 1.5;
                 ctx.strokeRect(x, y, anchoBarra, altoBarra);
 
-                ctx.fillStyle = '#1F3A5F';
-                ctx.font = 'bold 12px Segoe UI';
-                ctx.textAlign = 'center';
-                ctx.fillText(d.frecuencia, x + anchoBarra / 2, y - 5);
+                // Guardar punto central para polígono
+                const cx = x + anchoBarra / 2;
+                puntosPoligono.push({ x: cx, y: y, val: d.frecuencia });
 
+                // Títulos Eje X (Límites de intervalos)
                 ctx.fillStyle = '#333333';
-                ctx.font = '10px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText(fmtNum(d.li, 1), x, height - padding + 15);
+                if (i === numBarras - 1) {
+                    ctx.fillText(fmtNum(d.ls, 1), x + anchoBarra, height - padding + 15);
+                }
+            });
+
+            // Punto final polígono en 0
+            puntosPoligono.push({ x: padding + numBarras * anchoBarra, y: height - padding, val: 0 });
+
+            // Dibujar POLÍGONO DE FRECUENCIAS (Línea Ámbar)
+            ctx.beginPath();
+            ctx.strokeStyle = '#E9A23B';
+            ctx.lineWidth = 2.5;
+
+            puntosPoligono.forEach((pt, idx) => {
+                if (idx === 0) ctx.moveTo(pt.x, pt.y);
+                else ctx.lineTo(pt.x, pt.y);
+            });
+            ctx.stroke();
+
+            // Dibujar puntos del Polígono y etiquetas
+            puntosPoligono.forEach((pt, idx) => {
+                if (idx > 0 && idx < puntosPoligono.length - 1) {
+                    ctx.beginPath();
+                    ctx.fillStyle = '#E9A23B';
+                    ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Etiqueta del valor arriba
+                    ctx.fillStyle = '#1F3A5F';
+                    ctx.font = 'bold 11px Segoe UI';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(pt.val, pt.x, pt.y - 8);
+                }
+            });
+        }
+
+        // Dibuja el DIAGRAMA DE CAJA Y BIGOTES (BOXPLOT)
+        function dibujarBoxplot(canvasId, min, Q1, Me, Q3, max, media, varNombre) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 50;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Título del diagrama
+            ctx.fillStyle = '#1F3A5F';
+            ctx.font = 'bold 12px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Diagrama de caja y bigotes · ${varNombre}`, width / 2, 20);
+
+            const chartWidth = width - 2 * padding;
+            const rangoTotal = (max - min) === 0 ? 1 : (max - min);
+
+            function toX(val) {
+                return padding + ((val - min) / rangoTotal) * chartWidth;
+            }
+
+            const xMin = toX(min);
+            const xQ1 = toX(Q1);
+            const xMe = toX(Me);
+            const xQ3 = toX(Q3);
+            const xMax = toX(max);
+            const xMedia = toX(media);
+
+            const boxY = 60;
+            const boxHeight = 50;
+            const centerY = boxY + boxHeight / 2;
+
+            // Bigotes (Líneas horizontales)
+            ctx.beginPath();
+            ctx.strokeStyle = '#1F3A5F';
+            ctx.lineWidth = 2;
+            ctx.moveTo(xMin, centerY);
+            ctx.lineTo(xQ1, centerY);
+            ctx.moveTo(xQ3, centerY);
+            ctx.lineTo(xMax, centerY);
+            ctx.stroke();
+
+            // Topes de los bigotes (Líneas verticales Mín y Máx)
+            ctx.beginPath();
+            ctx.moveTo(xMin, centerY - 12);
+            ctx.lineTo(xMin, centerY + 12);
+            ctx.moveTo(xMax, centerY - 12);
+            ctx.lineTo(xMax, centerY + 12);
+            ctx.stroke();
+
+            // Caja (Q1 a Q3)
+            ctx.fillStyle = '#EBF5F5';
+            ctx.fillRect(xQ1, boxY, (xQ3 - xQ1) || 4, boxHeight);
+
+            ctx.strokeStyle = '#1F3A5F';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(xQ1, boxY, (xQ3 - xQ1) || 4, boxHeight);
+
+            // Mediana (Línea vertical Ámbar dentro de la caja)
+            ctx.beginPath();
+            ctx.strokeStyle = '#E9A23B';
+            ctx.lineWidth = 3;
+            ctx.moveTo(xMe, boxY);
+            ctx.lineTo(xMe, boxY + boxHeight);
+            ctx.stroke();
+
+            // Media (Punto Rojo)
+            ctx.beginPath();
+            ctx.fillStyle = '#C0392B';
+            ctx.arc(xMedia, centerY, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Etiqueta x̄ Media arriba
+            ctx.fillStyle = '#C0392B';
+            ctx.font = 'bold 11px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText(`x̄ = ${fmtNum(media, 2)}`, xMedia, boxY - 8);
+
+            // Etiquetas de Mín, Q1, Me, Q3, Máx abajo
+            ctx.fillStyle = '#333333';
+            ctx.font = '10px Segoe UI';
+            
+            ctx.fillText(`Mín: ${fmtNum(min, 1)}`, xMin, boxY + boxHeight + 20);
+            ctx.fillText(`Q1: ${fmtNum(Q1, 2)}`, xQ1, boxY + boxHeight + 20);
+            ctx.fillText(`Me: ${fmtNum(Me, 2)}`, xMe, boxY + boxHeight + 35);
+            ctx.fillText(`Q3: ${fmtNum(Q3, 2)}`, xQ3, boxY + boxHeight + 20);
+            ctx.fillText(`Máx: ${fmtNum(max, 1)}`, xMax, boxY + boxHeight + 20);
+        }
+
+        // Dibuja el DIAGRAMA DE BARRAS HORIZONTAL MULTICOLOR
+        function dibujarBarrasHorizontal(canvasId, datos, totalN) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            const width = canvas.width;
+            const height = canvas.height;
+            const paddingLeft = 130;
+            const paddingRight = 90;
+            const paddingTop = 20;
+            const paddingBottom = 20;
+
+            ctx.clearRect(0, 0, width, height);
+            if (datos.length === 0) return;
+
+            const paletaColores = [
+                '#2A9D8F', '#E9A23B', '#9B59B6', '#3498DB', 
+                '#E67E22', '#27AE60', '#E74C3C', '#1F3A5F'
+            ];
+
+            const chartWidth = width - paddingLeft - paddingRight;
+            const numBarras = datos.length;
+            const altoEspacio = (height - paddingTop - paddingBottom) / numBarras;
+            const altoBarra = Math.min(26, altoEspacio * 0.65);
+
+            const maxFrec = Math.max(...datos.map(d => d.frecuencia), 1);
+
+            datos.forEach((d, i) => {
+                const y = paddingTop + i * altoEspacio + (altoEspacio - altoBarra) / 2;
+                const anchoBarra = (d.frecuencia / maxFrec) * chartWidth;
+
+                // Dibujar Barra
+                ctx.fillStyle = paletaColores[i % paletaColores.length];
+                ctx.fillRect(paddingLeft, y, anchoBarra, altoBarra);
+
+                // Etiqueta Categoría a la izquierda
+                ctx.fillStyle = '#333333';
+                ctx.font = '11px Segoe UI';
+                ctx.textAlign = 'right';
+                
                 let lbl = d.etiqueta;
-                if (lbl.length > 15) lbl = lbl.substring(0, 12) + '...';
-                ctx.fillText(lbl, x + anchoBarra / 2, height - padding + 15);
+                if (lbl.length > 18) lbl = lbl.substring(0, 16) + '...';
+                ctx.fillText(lbl, paddingLeft - 10, y + altoBarra / 2 + 4);
+
+                // Texto con fi y porcentaje fi (%): ej: 13 (21.67 %)
+                ctx.fillStyle = '#1F3A5F';
+                ctx.font = 'bold 11px Segoe UI';
+                ctx.textAlign = 'left';
+                const txt = `${d.frecuencia} (${fmtNum(d.porcentaje, 2)} %)`;
+                ctx.fillText(txt, paddingLeft + anchoBarra + 8, y + altoBarra / 2 + 4);
             });
         }
 
