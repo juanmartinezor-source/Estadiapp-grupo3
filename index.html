@@ -517,10 +517,116 @@
 
         <!-- PESTAÑA PROBABILIDAD -->
         <div id="probabilidad" class="tab-content">
-            <div class="under-construction">
-                <h3>En construcción</h3>
-                <p>Módulo de cálculos de probabilidad en desarrollo.</p>
+            <h3 class="section-title">Cálculo de Probabilidad de Eventos</h3>
+            <div class="filter-card">
+                <div class="form-grid">
+                    <!-- Evento A -->
+                    <div class="form-group" style="grid-column: 1 / -1; background-color: #FFFFFF; padding: 12px; border-radius: 6px; border: 1px solid #D1D5DB;">
+                        <label style="color: var(--primary); font-size: 1rem; margin-bottom: 8px;">Evento A (Principal)</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+                            <div>
+                                <label for="probVarA">Variable:</label>
+                                <select id="probVarA" onchange="actualizarInterfazEventoA()">
+                                    <optgroup label="Cuantitativas">
+                                        <option value="limpiezaNum">Limpieza (1 a 5)</option>
+                                        <option value="insumosNum">Insumos (1 a 5)</option>
+                                    </optgroup>
+                                    <optgroup label="Cualitativas">
+                                        <option value="franjaHoraria">Franja horaria</option>
+                                        <option value="piso">Piso del edificio</option>
+                                        <option value="ubicacion">Ubicación del baño</option>
+                                        <option value="tipoBano">Tipo de baño</option>
+                                        <option value="limpieza">Percepción de limpieza</option>
+                                        <option value="insumos">Disponibilidad de insumos</option>
+                                        <option value="frecuenciaPersonal">Frecuencia personal aseo</option>
+                                        <option value="infraestructura">Estado infraestructura</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <div id="grupoA_Cuanti" style="display: flex; gap: 8px;">
+                                <div style="flex: 1;">
+                                    <label for="probOpA">Operador:</label>
+                                    <select id="probOpA">
+                                        <option value="gt">Mayor que (&gt;)</option>
+                                        <option value="lte">Menor o igual que (≤)</option>
+                                    </select>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label for="probValA_Num">Valor:</label>
+                                    <input type="number" id="probValA_Num" min="1" max="5" step="1" value="3">
+                                </div>
+                            </div>
+
+                            <div id="grupoA_Cuali" style="display: none;">
+                                <label for="probValA_Cat">Categoría:</label>
+                                <select id="probValA_Cat"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Evento B (Opcional) -->
+                    <div class="form-group" style="grid-column: 1 / -1; background-color: #FFFFFF; padding: 12px; border-radius: 6px; border: 1px solid #D1D5DB;">
+                        <label style="color: var(--primary); font-size: 1rem; margin-bottom: 8px;">Evento B (Opcional - Condición Cualitativa)</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            <div>
+                                <label for="probVarB">Variable B:</label>
+                                <select id="probVarB" onchange="actualizarCategoriasB()">
+                                    <option value="">-- Sin Evento B --</option>
+                                    <option value="franjaHoraria">Franja horaria</option>
+                                    <option value="piso">Piso del edificio</option>
+                                    <option value="ubicacion">Ubicación del baño</option>
+                                    <option value="tipoBano">Tipo de baño</option>
+                                    <option value="frecuenciaPersonal">Frecuencia personal de aseo</option>
+                                    <option value="infraestructura">Estado infraestructura</option>
+                                </select>
+                            </div>
+                            <div id="grupoB_Cat" style="display: none;">
+                                <label for="probValB_Cat">Categoría B:</label>
+                                <select id="probValB_Cat"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-submit" onclick="calcularProbabilidades()">Calcular Probabilidades</button>
+                </div>
             </div>
+
+            <div id="contenedorResultadoProbabilidad"></div>
+
+            <h3 class="section-title" style="margin-top: 30px;">Tabla de Contingencia (Cruzada)</h3>
+            <div class="filter-card">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="tcVarFilas">Variable en Filas:</label>
+                        <select id="tcVarFilas" onchange="generarTablaContingencia()">
+                            <option value="piso">Piso del edificio</option>
+                            <option value="ubicacion">Ubicación del baño</option>
+                            <option value="tipoBano">Tipo de baño</option>
+                            <option value="franjaHoraria">Franja horaria</option>
+                            <option value="limpieza">Percepción de limpieza</option>
+                            <option value="insumos">Disponibilidad de insumos</option>
+                            <option value="frecuenciaPersonal">Frecuencia personal de aseo</option>
+                            <option value="infraestructura">Estado infraestructura</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="tcVarColumnas">Variable en Columnas:</label>
+                        <select id="tcVarColumnas" onchange="generarTablaContingencia()">
+                            <option value="tipoBano">Tipo de baño</option>
+                            <option value="piso">Piso del edificio</option>
+                            <option value="ubicacion">Ubicación del baño</option>
+                            <option value="franjaHoraria">Franja horaria</option>
+                            <option value="limpieza">Percepción de limpieza</option>
+                            <option value="insumos">Disponibilidad de insumos</option>
+                            <option value="frecuenciaPersonal">Frecuencia personal de aseo</option>
+                            <option value="infraestructura">Estado infraestructura</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="contenedorTablaContingencia"></div>
         </div>
 
         <!-- PESTAÑA INFORME -->
@@ -551,6 +657,8 @@
 
             if (tabId === 'analisis') {
                 ejecutarAnalisis();
+            } else if (tabId === 'probabilidad') {
+                inicializarModuloProbabilidad();
             }
         }
 
@@ -1251,11 +1359,9 @@
 
             let svgContent = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
 
-            // Ejes
             svgContent += `<line x1="${paddingLeft}" y1="${paddingTop}" x2="${paddingLeft}" y2="${height - paddingBottom}" stroke="#1F3A5F" stroke-width="2"/>`;
             svgContent += `<line x1="${paddingLeft}" y1="${height - paddingBottom}" x2="${width - paddingRight}" y2="${height - paddingBottom}" stroke="#1F3A5F" stroke-width="2"/>`;
 
-            // Marcas y grilla Eje Y (Frecuencia)
             const pasosY = Math.min(maxFrec, 5);
             for (let i = 0; i <= pasosY; i++) {
                 const val = Math.round((maxFrec / pasosY) * i);
@@ -1264,14 +1370,11 @@
                 svgContent += `<line x1="${paddingLeft}" y1="${yPos}" x2="${width - paddingRight}" y2="${yPos}" stroke="#F0F0F0" stroke-width="1"/>`;
             }
 
-            // Etiqueta Eje Y
             svgContent += `<text x="${paddingLeft - 35}" y="${paddingTop + chartH / 2}" fill="#1F3A5F" font-size="11" font-weight="bold" text-anchor="middle" font-family="Segoe UI" transform="rotate(-90, ${paddingLeft - 35}, ${paddingTop + chartH / 2})">Frecuencia (fi)</text>`;
 
             const puntosPoligono = [];
-            // Punto inicial del polígono (frecuencia 0)
             puntosPoligono.push({ x: paddingLeft, y: height - paddingBottom, val: 0 });
 
-            // Dibujar Barras
             datos.forEach((d, i) => {
                 const altoBarra = (d.frecuencia / maxFrec) * chartH;
                 const x = paddingLeft + i * anchoBarra;
@@ -1282,21 +1385,17 @@
                 const cx = x + anchoBarra / 2;
                 puntosPoligono.push({ x: cx, y: y, val: d.frecuencia });
 
-                // Etiquetas de límites en Eje X
                 svgContent += `<text x="${x}" y="${height - paddingBottom + 15}" fill="#333333" font-size="10" text-anchor="middle" font-family="Segoe UI">${fmtNum(d.li, 1)}</text>`;
                 if (i === numBarras - 1) {
                     svgContent += `<text x="${x + anchoBarra}" y="${height - paddingBottom + 15}" fill="#333333" font-size="10" text-anchor="middle" font-family="Segoe UI">${fmtNum(d.ls, 1)}</text>`;
                 }
             });
 
-            // Punto final del polígono
             puntosPoligono.push({ x: paddingLeft + numBarras * anchoBarra, y: height - paddingBottom, val: 0 });
 
-            // Dibujar Polígono de Frecuencias
             let pointsAttr = puntosPoligono.map(pt => `${pt.x},${pt.y}`).join(' ');
             svgContent += `<polyline points="${pointsAttr}" fill="none" stroke="#E9A23B" stroke-width="2.5"/>`;
 
-            // Puntos y números del polígono
             puntosPoligono.forEach((pt, idx) => {
                 if (idx > 0 && idx < puntosPoligono.length - 1) {
                     svgContent += `<circle cx="${pt.x}" cy="${pt.y}" r="4" fill="#E9A23B"/>`;
@@ -1304,7 +1403,6 @@
                 }
             });
 
-            // Etiqueta Eje X
             svgContent += `<text x="${paddingLeft + chartW / 2}" y="${height - 10}" fill="#1F3A5F" font-size="11" font-weight="bold" text-anchor="middle" font-family="Segoe UI">Intervalos de Clase</text>`;
 
             svgContent += `</svg>`;
@@ -1337,31 +1435,23 @@
 
             let svgContent = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
 
-            // Título
             svgContent += `<text x="${width / 2}" y="${20}" fill="#1F3A5F" font-size="12" font-weight="bold" text-anchor="middle" font-family="Segoe UI">Diagrama de caja y bigotes · ${varNombre}</text>`;
 
-            // Bigotes (Líneas horizontales)
             svgContent += `<line x1="${xMin}" y1="${centerY}" x2="${xQ1}" y2="${centerY}" stroke="#1F3A5F" stroke-width="2"/>`;
             svgContent += `<line x1="${xQ3}" y1="${centerY}" x2="${xMax}" y2="${centerY}" stroke="#1F3A5F" stroke-width="2"/>`;
 
-            // Topes Mín y Máx (Líneas verticales)
             svgContent += `<line x1="${xMin}" y1="${centerY - 12}" x2="${xMin}" y2="${centerY + 12}" stroke="#1F3A5F" stroke-width="2"/>`;
             svgContent += `<line x1="${xMax}" y1="${centerY - 12}" x2="${xMax}" y2="${centerY + 12}" stroke="#1F3A5F" stroke-width="2"/>`;
 
-            // Caja (Q1 a Q3)
             const boxW = Math.max((xQ3 - xQ1), 4);
             svgContent += `<rect x="${xQ1}" y="${boxY}" width="${boxW}" height="${boxHeight}" fill="#EBF5F5" stroke="#1F3A5F" stroke-width="2"/>`;
 
-            // Mediana
             svgContent += `<line x1="${xMe}" y1="${boxY}" x2="${xMe}" y2="${boxY + boxHeight}" stroke="#E9A23B" stroke-width="3"/>`;
 
-            // Media (Punto Rojo)
             svgContent += `<circle cx="${xMedia}" cy="${centerY}" r="5" fill="#C0392B"/>`;
 
-            // Etiqueta x̄
             svgContent += `<text x="${xMedia}" y="${boxY - 8}" fill="#C0392B" font-size="11" font-weight="bold" text-anchor="middle" font-family="Segoe UI">x̄ = ${fmtNum(media, 2)}</text>`;
 
-            // Etiquetas Mín, Q1, Me, Q3, Máx
             svgContent += `<text x="${xMin}" y="${boxY + boxHeight + 20}" fill="#333333" font-size="10" text-anchor="middle" font-family="Segoe UI">Mín: ${fmtNum(min, 1)}</text>`;
             svgContent += `<text x="${xQ1}" y="${boxY + boxHeight + 20}" fill="#333333" font-size="10" text-anchor="middle" font-family="Segoe UI">Q1: ${fmtNum(Q1, 2)}</text>`;
             svgContent += `<text x="${xMe}" y="${boxY + boxHeight + 35}" fill="#333333" font-size="10" text-anchor="middle" font-family="Segoe UI">Me: ${fmtNum(Me, 2)}</text>`;
@@ -1402,21 +1492,317 @@
                 const anchoBarra = (d.frecuencia / maxFrec) * chartW;
                 const color = paletaColores[i % paletaColores.length];
 
-                // Barra
                 svgContent += `<rect x="${paddingLeft}" y="${y}" width="${anchoBarra}" height="${altoBarra}" fill="${color}" rx="3"/>`;
 
-                // Etiqueta Categoría
                 let lbl = d.etiqueta;
                 if (lbl.length > 20) lbl = lbl.substring(0, 18) + '...';
                 svgContent += `<text x="${paddingLeft - 10}" y="${y + altoBarra / 2 + 4}" fill="#333333" font-size="11" text-anchor="end" font-family="Segoe UI">${lbl}</text>`;
 
-                // Frecuencia y porcentaje
                 const txt = `${d.frecuencia} (${fmtNum(d.porcentaje, 2)} %)`;
                 svgContent += `<text x="${paddingLeft + anchoBarra + 8}" y="${y + altoBarra / 2 + 4}" fill="#1F3A5F" font-size="11" font-weight="bold" text-anchor="start" font-family="Segoe UI">${txt}</text>`;
             });
 
             svgContent += `</svg>`;
             return svgContent;
+        }
+
+        // ==========================================
+        // MÓDULO PESTAÑA PROBABILIDAD
+        // ==========================================
+
+        function inicializarModuloProbabilidad() {
+            actualizarInterfazEventoA();
+            actualizarCategoriasB();
+            generarTablaContingencia();
+        }
+
+        function actualizarInterfazEventoA() {
+            const varA = document.getElementById('probVarA').value;
+            const esCuanti = (varA === 'limpiezaNum' || varA === 'insumosNum');
+            
+            const gCuanti = document.getElementById('grupoA_Cuanti');
+            const gCuali = document.getElementById('grupoA_Cuali');
+
+            if (esCuanti) {
+                gCuanti.style.display = 'flex';
+                gCuali.style.display = 'none';
+            } else {
+                gCuanti.style.display = 'none';
+                gCuali.style.display = 'block';
+
+                const selectCat = document.getElementById('probValA_Cat');
+                selectCat.innerHTML = '';
+                const opciones = [...new Set(registros.map(r => r[varA]).filter(Boolean))].sort();
+                opciones.forEach(op => {
+                    const optElem = document.createElement('option');
+                    optElem.value = op;
+                    optElem.textContent = op;
+                    selectCat.appendChild(optElem);
+                });
+            }
+        }
+
+        function actualizarCategoriasB() {
+            const varB = document.getElementById('probVarB').value;
+            const gB_Cat = document.getElementById('grupoB_Cat');
+            const selectCat = document.getElementById('probValB_Cat');
+
+            if (!varB) {
+                gB_Cat.style.display = 'none';
+                return;
+            }
+
+            gB_Cat.style.display = 'block';
+            selectCat.innerHTML = '';
+
+            const opciones = [...new Set(registros.map(r => r[varB]).filter(Boolean))].sort();
+            opciones.forEach(op => {
+                const optElem = document.createElement('option');
+                optElem.value = op;
+                optElem.textContent = op;
+                selectCat.appendChild(optElem);
+            });
+        }
+
+        function evaluarCumpleEventoA(registro, varA) {
+            const esCuanti = (varA === 'limpiezaNum' || varA === 'insumosNum');
+
+            if (esCuanti) {
+                const attrOrig = (varA === 'limpiezaNum') ? 'limpieza' : 'insumos';
+                const valStr = registro[attrOrig];
+                const match = String(valStr).match(/^(\d+)/);
+                if (!match) return false;
+
+                const valNum = parseFloat(match[1]);
+                const op = document.getElementById('probOpA').value;
+                const valCorte = parseFloat(document.getElementById('probValA_Num').value) || 0;
+
+                return (op === 'gt') ? (valNum > valCorte) : (valNum <= valCorte);
+            } else {
+                const catSel = document.getElementById('probValA_Cat').value;
+                return registro[varA] === catSel;
+            }
+        }
+
+        function obtenerTextoNombreEventoA() {
+            const varA = document.getElementById('probVarA').value;
+            const esCuanti = (varA === 'limpiezaNum' || varA === 'insumosNum');
+            const varNombreText = document.getElementById('probVarA').options[document.getElementById('probVarA').selectedIndex].text;
+
+            if (esCuanti) {
+                const op = document.getElementById('probOpA').value;
+                const opTxt = (op === 'gt') ? '>' : '≤';
+                const valCorte = document.getElementById('probValA_Num').value;
+                return `${varNombreText} ${opTxt} ${valCorte}`;
+            } else {
+                const catSel = document.getElementById('probValA_Cat').value;
+                return `${varNombreText} = "${catSel}"`;
+            }
+        }
+
+        function calcularProbabilidades() {
+            const contenedor = document.getElementById('contenedorResultadoProbabilidad');
+
+            if (registros.length === 0) {
+                contenedor.innerHTML = `<div class="info-card" style="background-color: #FFF3CD; border-color: #FFEBAA; color: #856404;">No hay registros cargados para calcular probabilidades.</div>`;
+                return;
+            }
+
+            const total = registros.length;
+            const varA = document.getElementById('probVarA').value;
+            const txtA = obtenerTextoNombreEventoA();
+
+            let casosA = 0;
+            registros.forEach(r => {
+                if (evaluarCumpleEventoA(r, varA)) casosA++;
+            });
+
+            const pA = casosA / total;
+            const pA_pct = pA * 100;
+
+            const varB = document.getElementById('probVarB').value;
+            const tieneB = Boolean(varB);
+
+            let html = `
+                <div class="table-responsive" style="margin-top: 15px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Probabilidad</th>
+                                <th>Fórmula / Operación</th>
+                                <th>Casos / Total</th>
+                                <th>Resultado (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>P(A)</strong>: ${txtA}</td>
+                                <td>Casos de A ÷ Total de datos</td>
+                                <td>${casosA} / ${total}</td>
+                                <td><strong>${fmtNum(pA_pct, 2)} %</strong></td>
+                            </tr>
+            `;
+
+            if (tieneB) {
+                const catB = document.getElementById('probValB_Cat').value;
+                const varBText = document.getElementById('probVarB').options[document.getElementById('probVarB').selectedIndex].text;
+                const txtB = `${varBText} = "${catB}"`;
+
+                let casosB = 0;
+                let casosA_y_B = 0;
+
+                registros.forEach(r => {
+                    const cumpleA = evaluarCumpleEventoA(r, varA);
+                    const cumpleB = (r[varB] === catB);
+
+                    if (cumpleB) casosB++;
+                    if (cumpleA && cumpleB) casosA_y_B++;
+                });
+
+                const pB = casosB / total;
+                const pB_pct = pB * 100;
+
+                const pInter = casosA_y_B / total;
+                const pInter_pct = pInter * 100;
+
+                let pCond = 0;
+                let pCond_pct = 0;
+
+                if (casosB > 0) {
+                    pCond = casosA_y_B / casosB;
+                    pCond_pct = pCond * 100;
+                }
+
+                html += `
+                            <tr>
+                                <td><strong>P(B)</strong>: ${txtB}</td>
+                                <td>Casos de B ÷ Total de datos</td>
+                                <td>${casosB} / ${total}</td>
+                                <td><strong>${fmtNum(pB_pct, 2)} %</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>P(A ∩ B)</strong>: Ocurren A y B simultáneamente</td>
+                                <td>Casos (A ∩ B) ÷ Total de datos</td>
+                                <td>${casosA_y_B} / ${total}</td>
+                                <td><strong>${fmtNum(pInter_pct, 2)} %</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>P(A | B)</strong>: Ocurre A dado que ocurrió B</td>
+                                <td>P(A ∩ B) ÷ P(B) = Casos(A ∩ B) ÷ Casos(B)</td>
+                                <td>${casosA_y_B} / ${casosB}</td>
+                                <td><strong>${casosB > 0 ? fmtNum(pCond_pct, 2) + ' %' : 'Indefinida (P(B)=0)'}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                `;
+
+                // Interpretación de cambio en probabilidad
+                if (casosB > 0) {
+                    const diff = pCond_pct - pA_pct;
+                    let efectoTxt = "";
+
+                    if (Math.abs(diff) < 1.0) {
+                        efectoTxt = "<strong>casi no cambia</strong> la probabilidad de que ocurra A (los eventos son prácticamente independientes).";
+                    } else if (diff > 0) {
+                        efectoTxt = `<strong>aumenta</strong> la probabilidad de que ocurra A (pasa de ${fmtNum(pA_pct, 2)}% a ${fmtNum(pCond_pct, 2)}%).`;
+                    } else {
+                        efectoTxt = `<strong>disminuye</strong> la probabilidad de que ocurra A (pasa de ${fmtNum(pA_pct, 2)}% a ${fmtNum(pCond_pct, 2)}%).`;
+                    }
+
+                    html += `
+                        <div class="info-card">
+                            <strong>Interpretación:</strong> Saber que ocurrió el evento B (<em>${txtB}</em>) ${efectoTxt}
+                        </div>
+                    `;
+                }
+
+            } else {
+                html += `
+                        </tbody>
+                    </table>
+                </div>
+                <div class="info-card" style="background-color: #EBF5F5; border-color: #2A9D8F; color: #1F3A5F;">
+                    <strong>Nota:</strong> Puede seleccionar opcionalmente un Evento B cualitativo para calcular probabilidades compuestas P(A ∩ B) y condicionales P(A | B).
+                </div>
+                `;
+            }
+
+            contenedor.innerHTML = html;
+        }
+
+        function generarTablaContingencia() {
+            const contenedor = document.getElementById('contenedorTablaContingencia');
+            const varFila = document.getElementById('tcVarFilas').value;
+            const varCol = document.getElementById('tcVarColumnas').value;
+
+            if (registros.length === 0) {
+                contenedor.innerHTML = `<div class="info-card" style="background-color: #FFF3CD; border-color: #FFEBAA; color: #856404;">No hay registros guardados para generar la tabla de contingencia.</div>`;
+                return;
+            }
+
+            const catFilas = [...new Set(registros.map(r => r[varFila]).filter(Boolean))].sort();
+            const catCols = [...new Set(registros.map(r => r[varCol]).filter(Boolean))].sort();
+
+            if (catFilas.length === 0 || catCols.length === 0) {
+                contenedor.innerHTML = `<div class="info-card" style="background-color: #FFF3CD; border-color: #FFEBAA; color: #856404;">No hay categorías suficientes en las variables elegidas.</div>`;
+                return;
+            }
+
+            const matriz = {};
+            const totalesFila = {};
+            const totalesCol = {};
+            catCols.forEach(c => totalesCol[c] = 0);
+            let granTotal = 0;
+
+            catFilas.forEach(f => {
+                matriz[f] = {};
+                totalesFila[f] = 0;
+                catCols.forEach(c => {
+                    matriz[f][c] = 0;
+                });
+            });
+
+            registros.forEach(r => {
+                const valF = r[varFila];
+                const valC = r[varCol];
+
+                if (valF && valC && matriz[valF] && matriz[valF][valC] !== undefined) {
+                    matriz[valF][valC]++;
+                    totalesFila[valF]++;
+                    totalesCol[valC]++;
+                    granTotal++;
+                }
+            });
+
+            let html = `
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>${document.getElementById('tcVarFilas').options[document.getElementById('tcVarFilas').selectedIndex].text} \\ ${document.getElementById('tcVarColumnas').options[document.getElementById('tcVarColumnas').selectedIndex].text}</th>
+            `;
+
+            catCols.forEach(c => {
+                html += `<th>${c}</th>`;
+            });
+            html += `<th>TOTAL FILA</th></tr></thead><tbody>`;
+
+            catFilas.forEach(f => {
+                html += `<tr><td><strong>${f}</strong></td>`;
+                catCols.forEach(c => {
+                    html += `<td>${matriz[f][c]}</td>`;
+                });
+                html += `<td style="font-weight: bold; background-color: #F8F9FA;">${totalesFila[f]}</td></tr>`;
+            });
+
+            html += `</tbody><tfoot><tr style="font-weight: bold; background-color: #EBF5F5;"><td>TOTAL COLUMNA</td>`;
+            catCols.forEach(c => {
+                html += `<td>${totalesCol[c]}</td>`;
+            });
+            html += `<td style="background-color: var(--primary); color: #FFFFFF;">${granTotal}</td></tr></tfoot></table></div>`;
+
+            contenedor.innerHTML = html;
         }
 
         window.onload = function() {
