@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EstadíApp – Grupo3 | UNIPAZ</title>
+    <style>
+        :root {
+            --primary: #1F3A5F;
+            --secondary: #2A9D8F;
+            --accent: #E9A23B;
+            --bg-color: #F4F6F8;
+            --card-bg: #FFFFFF;
+            --text-color: #333333;
+            --text-light: #666666;
+            --danger: #E74C3C;
+            --border-radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding-bottom: 30px;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: #FFFFFF;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            color: var(--accent);
+            margin-bottom: 0.3rem;
+        }
+
+        header h2 {
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        nav {
+            display: flex;
+            background-color: var(--secondary);
+            overflow-x: auto;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tab-button {
+            flex: 1;
+            min-width: 90px;
+            padding: 12px 10px;
+            background: none;
+            border: none;
+            color: #FFFFFF;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab-button.active {
+            background-color: var(--primary);
+            border-bottom: 4px solid var(--accent);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .under-construction {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .under-construction h3 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .alert-box {
+            padding: 12px 15px;
+            background-color: #D4EDDA;
+            color: #155724;
+            border: 1px solid #C3E6CB;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-box.error {
+            background-color: #F8D7DA;
+            color: #721C24;
+            border-color: #F5C6CB;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        @media (min-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        .form-group input, 
+        .form-group select {
+            padding: 10px;
+            border: 1px solid #CCC;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            background-color: #FFF;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 5px rgba(42, 157, 143, 0.4);
+        }
+
+        .btn-submit {
+            grid-column: 1 / -1;
+            background-color: var(--primary);
+            color: #FFF;
+            border: none;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        .btn-submit:hover {
+            background-color: #142640;
+        }
+
+        .counter-box {
+            margin: 25px 0 15px 0;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #E0E0E0;
+            border-radius: var(--border-radius);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #E0E0E0;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #F8F9FA;
+        }
+
+        .btn-delete {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .btn-delete:hover {
+            background-color: #C0392B;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>EstadíApp – Grupo3</h1>
+        <h2>Evaluación del Servicio de Baños en el Edificio de Aulas de UNIPAZ</h2>
+    </header>
+
+    <nav>
+        <button class="tab-button active" onclick="openTab('registrar')">Registrar</button>
+        <button class="tab-button" onclick="openTab('analisis')">Análisis</button>
+        <button class="tab-button" onclick="openTab('probabilidad')">Probabilidad</button>
+        <button class="tab-button" onclick="openTab('informe')">Informe</button>
+    </nav>
+
+    <div class="container">
+        
+        <!-- PESTAÑA REGISTRAR -->
+        <div id="registrar" class="tab-content active">
+            <div id="alertBox" class="alert-box"></div>
+
+            <form id="registroForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="fechaHora">Fecha y Hora</label>
+                        <input type="datetime-local" id="fechaHora" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="piso">Piso del edificio</label>
+                        <select id="piso" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="Piso 1">Piso 1</option>
+                            <option value="Piso 2">Piso 2</option>
+                            <option value="Piso 3">Piso 3</option>
+                            <option value="Piso 4">Piso 4</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ubicacion">Ubicación del baño</label>
+                        <select id="ubicacion" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="Bloque A">Bloque A</option>
+                            <option value="Bloque B">Bloque B</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tipoBano">Tipo de baño</label>
+                        <select id="tipoBano" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="Hombres">Hombres</option>
+                            <option value="Mujeres">Mujeres</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="limpieza">Percepción de limpieza y aseo</label>
+                        <select id="limpieza" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="1 - Muy malo">1 - Muy malo</option>
+                            <option value="2 - Malo">2 - Malo</option>
+                            <option value="3 - Aceptable">3 - Aceptable</option>
+                            <option value="4 - Bueno">4 - Bueno</option>
+                            <option value="5 - Excelente">5 - Excelente</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="insumos">Disponibilidad de insumos</label>
+                        <select id="insumos" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="1 - Nunca hay">1 - Nunca hay</option>
+                            <option value="2 - Casi nunca">2 - Casi nunca</option>
+                            <option value="3 - A veces">3 - A veces</option>
+                            <option value="4 - Casi siempre">4 - Casi siempre</option>
+                            <option value="5 - Siempre">5 - Siempre</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="frecuenciaPersonal">Frecuencia personal de aseo</label>
+                        <select id="frecuenciaPersonal" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="Constantemente durante el día">Constantemente durante el día</option>
+                            <option value="1 o 2 veces al día">1 o 2 veces al día</option>
+                            <option value="Rara vez">Rara vez</option>
+                            <option value="Nunca">Nunca</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="infraestructura">Estado infraestructura y grifería</label>
+                        <select id="infraestructura" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="Todo operativo">Todo operativo</option>
+                            <option value="Fuga/Goteo menor">Fuga/Goteo menor</option>
+                            <option value="Sanitarios/Lavamanos fuera de servicio">Sanitarios/Lavamanos fuera de servicio</option>
+                            <option value="Daño grave / Sin agua">Daño grave / Sin agua</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Guardar registro</button>
+                </div>
+            </form>
+
+            <div class="counter-box">
+                <span>Registros guardados:</span>
+                <span id="totalRegistros">0</span>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Fecha y Hora</th>
+                            <th>Franja Horaria</th>
+                            <th>Piso</th>
+                            <th>Ubicación</th>
+                            <th>Tipo</th>
+                            <th>Limpieza</th>
+                            <th>Insumos</th>
+                            <th>Frec. Aseo</th>
+                            <th>Infraestructura</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaCuerpo">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PESTAÑA ANÁLISIS -->
+        <div id="analisis" class="tab-content">
+            <div class="under-construction">
+                <h3>En construcción</h3>
+                <p>Módulo de análisis estadístico en desarrollo.</p>
+            </div>
+        </div>
+
+        <!-- PESTAÑA PROBABILIDAD -->
+        <div id="probabilidad" class="tab-content">
+            <div class="under-construction">
+                <h3>En construcción</h3>
+                <p>Módulo de cálculos de probabilidad en desarrollo.</p>
+            </div>
+        </div>
+
+        <!-- PESTAÑA INFORME -->
+        <div id="informe" class="tab-content">
+            <div class="under-construction">
+                <h3>En construcción</h3>
+                <p>Módulo de informes y resultados finales en desarrollo.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Arreglo para almacenar los registros en memoria local
+        let registros = JSON.parse(localStorage.getItem('unipaz_registros')) || [];
+
+        // Cambiar entre pestañas
+        function openTab(tabId) {
+            const contents = document.querySelectorAll('.tab-content');
+            const buttons = document.querySelectorAll('.tab-button');
+            
+            contents.forEach(content => content.classList.remove('active'));
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Establecer fecha y hora actual en el campo de entrada
+        function setFechaHoraActual() {
+            const ahora = new Date();
+            ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+            document.getElementById('fechaHora').value = ahora.toISOString().slice(0, 16);
+        }
+
+        // Calcular la franja horaria a partir de una cadena HH:MM
+        function calcularFranjaHoraria(dateTimeStr) {
+            if (!dateTimeStr) return '';
+            const fechaObj = new Date(dateTimeStr);
+            const hora = fechaObj.getHours();
+            const horaInicio = String(hora).padStart(2, '0');
+            return `${horaInicio}:00–${horaInicio}:59`;
+        }
+
+        // Mostrar alertas personalizadas en pantalla
+        function mostrarAlerta(mensaje, esError = false) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.textContent = mensaje;
+            alertBox.className = esError ? 'alert-box error' : 'alert-box';
+            alertBox.style.display = 'block';
+
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 3500);
+        }
+
+        // Renderizar la tabla de registros y actualizar el contador
+        function renderizarTabla() {
+            const tbody = document.getElementById('tablaCuerpo');
+            tbody.innerHTML = '';
+
+            registros.forEach((reg, index) => {
+                const tr = document.createElement('tr');
+                
+                // Formatear la fecha para visualización
+                const fechaFormat = new Date(reg.fechaHora).toLocaleString('es-CO', {
+                    dateStyle: 'short',
+                    timeStyle: 'short'
+                });
+
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${fechaFormat}</td>
+                    <td>${reg.franjaHoraria}</td>
+                    <td>${reg.piso}</td>
+                    <td>${reg.ubicacion}</td>
+                    <td>${reg.tipoBano}</td>
+                    <td>${reg.limpieza}</td>
+                    <td>${reg.insumos}</td>
+                    <td>${reg.frecuenciaPersonal}</td>
+                    <td>${reg.infraestructura}</td>
+                    <td>
+                        <button class="btn-delete" onclick="eliminarRegistro(${index})">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('totalRegistros').textContent = registros.length;
+        }
+
+        // Procesar el envío del formulario
+        document.getElementById('registroForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const fechaHora = document.getElementById('fechaHora').value;
+            const piso = document.getElementById('piso').value;
+            const ubicacion = document.getElementById('ubicacion').value;
+            const tipoBano = document.getElementById('tipoBano').value;
+            const limpieza = document.getElementById('limpieza').value;
+            const insumos = document.getElementById('insumos').value;
+            const frecuenciaPersonal = document.getElementById('frecuenciaPersonal').value;
+            const infraestructura = document.getElementById('infraestructura').value;
+
+            // Validación de campos vacíos
+            if (!fechaHora || !piso || !ubicacion || !tipoBano || !limpieza || !insumos || !frecuenciaPersonal || !infraestructura) {
+                mostrarAlerta('Por favor, diligencie todos los campos antes de guardar.', true);
+                return;
+            }
+
+            const nuevoRegistro = {
+                fechaHora,
+                franjaHoraria: calcularFranjaHoraria(fechaHora),
+                piso,
+                ubicacion,
+                tipoBano,
+                limpieza,
+                insumos,
+                frecuenciaPersonal,
+                infraestructura
+            };
+
+            registros.push(nuevoRegistro);
+            localStorage.setItem('unipaz_registros', JSON.stringify(registros));
+
+            mostrarAlerta('¡Registro guardado con éxito!');
+            document.getElementById('registroForm').reset();
+            setFechaHoraActual();
+            renderizarTabla();
+        });
+
+        // Eliminar registro por su índice
+        function eliminarRegistro(index) {
+            const confirmar = confirm(`¿Está seguro de eliminar el registro #${index + 1}?`);
+            if (confirmar) {
+                registros.splice(index, 1);
+                localStorage.setItem('unipaz_registros', JSON.stringify(registros));
+                mostrarAlerta('El registro ha sido eliminado correctamente.');
+                renderizarTabla();
+            }
+        }
+
+        // Inicialización al cargar la página
+        window.onload = function() {
+            setFechaHoraActual();
+            renderizarTabla();
+        };
+    </script>
+</body>
+</html>
