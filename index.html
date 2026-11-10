@@ -98,18 +98,6 @@
             display: block;
         }
 
-        .under-construction {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-light);
-        }
-
-        .under-construction h3 {
-            color: var(--primary);
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-
         .alert-box {
             padding: 12px 15px;
             background-color: #D4EDDA;
@@ -151,7 +139,8 @@
         }
 
         .form-group input, 
-        .form-group select {
+        .form-group select,
+        .form-group textarea {
             padding: 10px;
             border: 1px solid #CCC;
             border-radius: var(--border-radius);
@@ -160,7 +149,8 @@
         }
 
         .form-group input:focus, 
-        .form-group select:focus {
+        .form-group select:focus,
+        .form-group textarea:focus {
             outline: none;
             border-color: var(--secondary);
             box-shadow: 0 0 5px rgba(42, 157, 143, 0.4);
@@ -214,6 +204,7 @@
         .btn-csv-import { background-color: #34495E; color: #FFFFFF; }
         .btn-json-export { background-color: var(--accent); color: #FFFFFF; }
         .btn-json-import { background-color: #7F8C8D; color: #FFFFFF; }
+        .btn-print { background-color: var(--primary); color: #FFFFFF; width: 100%; padding: 14px; font-size: 1rem; font-weight: bold; }
 
         .counter-box {
             margin: 25px 0 15px 0;
@@ -319,6 +310,63 @@
             color: var(--text-light);
             margin-top: 8px;
             font-style: italic;
+        }
+
+        .report-header {
+            border-bottom: 3px double var(--primary);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        @media (min-width: 600px) {
+            .report-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* ESTILOS DE IMPRESIÓN Y PDF */
+        @media print {
+            nav, .actions-toolbar, .btn-submit, .btn-action, .btn-print, .no-print {
+                display: none !important;
+            }
+
+            body {
+                background-color: #FFFFFF;
+                color: #000000;
+                padding: 0;
+            }
+
+            .container {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .tab-content {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                display: block !important;
+            }
+
+            .chart-container {
+                page-break-inside: avoid;
+            }
+
+            .table-responsive {
+                overflow: visible;
+            }
+
+            textarea {
+                border: none !important;
+                resize: none;
+            }
         }
     </style>
 </head>
@@ -631,9 +679,105 @@
 
         <!-- PESTAÑA INFORME -->
         <div id="informe" class="tab-content">
-            <div class="under-construction">
-                <h3>En construcción</h3>
-                <p>Módulo de informes y resultados finales en desarrollo.</p>
+            <div style="margin-bottom: 20px;" class="no-print">
+                <button type="button" class="btn-action btn-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+            </div>
+
+            <!-- ENCABEZADO DE INFORME -->
+            <div class="report-header">
+                <h2 style="color: var(--primary); font-size: 1.4rem; text-align: center;">Evaluación del Servicio de Baños en el Edificio de Aulas de UNIPAZ</h2>
+                <h4 style="color: var(--secondary); text-align: center; margin-top: 4px; font-weight: 600;">Proyecto de Aula · Estadística (840601) · UNIPAZ</h4>
+                
+                <div class="report-grid" style="margin-top: 15px;">
+                    <div>
+                        <strong>Integrantes del Grupo:</strong>
+                        <input type="text" id="infIntegrantes" style="width: 100%; border: 1px solid #CCC; padding: 6px; border-radius: 4px;" placeholder="Ingrese nombres de los integrantes..." onchange="guardarTextoInforme('infIntegrantes', this.value)">
+                    </div>
+                    <div>
+                        <strong>Período de Recolección:</strong>
+                        <p id="infPeriodo" style="color: var(--primary); font-weight: bold; margin-top: 4px;">-</p>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <strong>Tamaño total de la Muestra (n):</strong>
+                        <span id="infMuestraTotal" style="font-weight: bold; color: var(--accent); font-size: 1.1rem;">0</span> registros validados
+                    </div>
+                </div>
+            </div>
+
+            <!-- FICHA TÉCNICA -->
+            <h3 class="section-title">Ficha Técnica del Estudio</h3>
+            <div class="filter-card">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="infObjetivo">Objetivo del Estudio:</label>
+                        <textarea id="infObjetivo" rows="2" onchange="guardarTextoInforme('infObjetivo', this.value)" placeholder="Describa el objetivo general del estudio..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="infPoblacion">Población Objetivo:</label>
+                        <textarea id="infPoblacion" rows="2" onchange="guardarTextoInforme('infPoblacion', this.value)" placeholder="Estudiantes, docentes y comunidad que usa el edificio..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="infTipoMuestreo">Tipo de Muestreo:</label>
+                        <select id="infTipoMuestreo" onchange="guardarTextoInforme('infTipoMuestreo', this.value)">
+                            <option value="Muestreo Aleatorio Simple">Muestreo Aleatorio Simple</option>
+                            <option value="Muestreo Sistemático">Muestreo Sistemático</option>
+                            <option value="Muestreo Estratificado por Piso/Bloque">Muestreo Estratificado por Piso/Bloque</option>
+                            <option value="Muestreo por Conveniencia / Conglomerados">Muestreo por Conveniencia / Conglomerados</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tamaño Muestral (n):</label>
+                        <input type="text" id="infMuestraFicha" readonly style="background-color: #E9ECEF; font-weight: bold;" value="0">
+                    </div>
+                </div>
+
+                <h4 style="margin: 15px 0 8px 0; color: var(--primary); font-size: 0.95rem;">Variables Levantadas en la Investigación</h4>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nombre de la Variable</th>
+                                <th>Tipo de Variable</th>
+                                <th>Escala de Medición</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>Fecha y Hora</td><td>Cualitativa Cronológica</td><td>Ordinal / Intervalo</td></tr>
+                            <tr><td>2</td><td>Franja Horaria</td><td>Cualitativa Categórica</td><td>Nominal</td></tr>
+                            <tr><td>3</td><td>Piso del edificio</td><td>Cualitativa Ordinal</td><td>Ordinal</td></tr>
+                            <tr><td>4</td><td>Ubicación del baño</td><td>Cualitativa Categórica</td><td>Nominal</td></tr>
+                            <tr><td>5</td><td>Tipo de baño</td><td>Cualitativa Categórica</td><td>Nominal</td></tr>
+                            <tr><td>6</td><td>Percepción de limpieza y aseo (1 a 5)</td><td>Cuantitativa Discreta</td><td>Razón (1-5)</td></tr>
+                            <tr><td>7</td><td>Disponibilidad de insumos (1 a 5)</td><td>Cuantitativa Discreta</td><td>Razón (1-5)</td></tr>
+                            <tr><td>8</td><td>Frecuencia personal de aseo</td><td>Cualitativa Ordinal</td><td>Ordinal</td></tr>
+                            <tr><td>9</td><td>Estado infraestructura y grifería</td><td>Cualitativa Categórica</td><td>Nominal</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RESULTADOS CONSOLIDADOS DE TODAS LAS VARIABLES -->
+            <h3 class="section-title">Resultados Consolidados por Variable</h3>
+            <div id="contenedorResultadosInforme"></div>
+
+            <!-- ANÁLISIS CUALITATIVO Y RECOMENDACIONES -->
+            <h3 class="section-title">Análisis Cualitativo y Cierre del Estudio</h3>
+            <div class="form-grid">
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="infInterpretacion">Interpretación de Resultados:</label>
+                    <textarea id="infInterpretacion" rows="4" onchange="guardarTextoInforme('infInterpretacion', this.value)" placeholder="Escriba la interpretación holística de las variables analizadas..."></textarea>
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="infConclusiones">Conclusiones Generales:</label>
+                    <textarea id="infConclusiones" rows="4" onchange="guardarTextoInforme('infConclusiones', this.value)" placeholder="Sintetice las hallazgos principales del diagnóstico..."></textarea>
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="infRecomendaciones">Recomendaciones para la Dependencia de UNIPAZ:</label>
+                    <textarea id="infRecomendaciones" rows="4" onchange="guardarTextoInforme('infRecomendaciones', this.value)" placeholder="Sugerencias puntuales para el personal de aseo, infraestructura y administración..."></textarea>
+                </div>
             </div>
         </div>
 
@@ -659,6 +803,8 @@
                 ejecutarAnalisis();
             } else if (tabId === 'probabilidad') {
                 inicializarModuloProbabilidad();
+            } else if (tabId === 'informe') {
+                generarInformeCompleto();
             }
         }
 
@@ -1213,7 +1359,6 @@
                 </div>
             `;
 
-            // LECTURA AUTOMÁTICA CUANTITATIVA
             let simetriaTxt = "";
             const diffMM = Math.abs(media - mediana);
             if (diffMM < 0.01) {
@@ -1697,7 +1842,6 @@
                 </div>
                 `;
 
-                // Interpretación de cambio en probabilidad
                 if (casosB > 0) {
                     const diff = pCond_pct - pA_pct;
                     let efectoTxt = "";
@@ -1803,6 +1947,84 @@
             html += `<td style="background-color: var(--primary); color: #FFFFFF;">${granTotal}</td></tr></tfoot></table></div>`;
 
             contenedor.innerHTML = html;
+        }
+
+        // ==========================================
+        // MÓDULO PESTAÑA INFORME
+        // ==========================================
+
+        function guardarTextoInforme(key, valor) {
+            localStorage.setItem('unipaz_informe_' + key, valor);
+        }
+
+        function cargarTextosInforme() {
+            const campos = ['infIntegrantes', 'infObjetivo', 'infPoblacion', 'infTipoMuestreo', 'infInterpretacion', 'infConclusiones', 'infRecomendaciones'];
+            campos.forEach(c => {
+                const elem = document.getElementById(c);
+                const valGuardado = localStorage.getItem('unipaz_informe_' + c);
+                if (elem && valGuardado !== null) {
+                    elem.value = valGuardado;
+                }
+            });
+        }
+
+        function generarInformeCompleto() {
+            cargarTextosInforme();
+
+            const n = registros.length;
+            document.getElementById('infMuestraTotal').textContent = n;
+            document.getElementById('infMuestraFicha').value = n;
+
+            const elemPeriodo = document.getElementById('infPeriodo');
+            if (n === 0) {
+                elemPeriodo.textContent = "Sin registros ingresados.";
+            } else {
+                const fechas = registros.map(r => new Date(r.fechaHora)).filter(d => !isNaN(d.getTime())).sort((a, b) => a - b);
+                if (fechas.length > 0) {
+                    const minF = fechas[0].toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
+                    const maxF = fechas[fechas.length - 1].toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
+                    elemPeriodo.textContent = `${minF} hasta ${maxF}`;
+                } else {
+                    elemPeriodo.textContent = "Fechas no válidas.";
+                }
+            }
+
+            const contenedor = document.getElementById('contenedorResultadosInforme');
+            contenedor.innerHTML = '';
+
+            if (n === 0) {
+                contenedor.innerHTML = `<div class="info-card" style="background-color: #FFF3CD; border-color: #FFEBAA; color: #856404;">No existen registros guardados para compilar el informe consolidado.</div>`;
+                return;
+            }
+
+            const listaVars = [
+                { key: 'franjaHoraria', nombre: 'Franja Horaria', tipo: 'cuali' },
+                { key: 'piso', nombre: 'Piso del Edificio', tipo: 'cuali' },
+                { key: 'ubicacion', nombre: 'Ubicación del Baño', tipo: 'cuali' },
+                { key: 'tipoBano', nombre: 'Tipo de Baño', tipo: 'cuali' },
+                { key: 'limpiezaNum', nombre: 'Percepción de Limpieza y Aseo (1 a 5)', tipo: 'cuanti' },
+                { key: 'insumosNum', nombre: 'Disponibilidad de Insumos (1 a 5)', tipo: 'cuanti' },
+                { key: 'frecuenciaPersonal', nombre: 'Frecuencia Personal de Aseo', tipo: 'cuali' },
+                { key: 'infraestructura', nombre: 'Estado Infraestructura y Grifería', tipo: 'cuali' }
+            ];
+
+            listaVars.forEach(v => {
+                const box = document.createElement('div');
+                box.className = 'filter-card';
+                box.style.marginBottom = '25px';
+
+                box.innerHTML = `<h4 style="color: var(--primary); font-size: 1.05rem; margin-bottom: 12px; border-bottom: 1px solid #CCC; padding-bottom: 5px;">Variable: ${v.nombre}</h4>`;
+                
+                const subContenedor = document.createElement('div');
+                box.appendChild(subContenedor);
+                contenedor.appendChild(box);
+
+                if (v.tipo === 'cuanti') {
+                    analizarCuantitativa(v.key, registros, subContenedor);
+                } else {
+                    analizarCualitativa(v.key, registros, subContenedor);
+                }
+            });
         }
 
         window.onload = function() {
