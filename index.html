@@ -1,387 +1,526 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-CO">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EstadíApp – Grupo 3 | Evaluación Baños UNIPAZ</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root {
-      --primary: #1b4332;
-      --primary-light: #2d6a4f;
-      --accent: #40916c;
-      --bg: #f4f7f5;
-      --card: #ffffff;
-      --text: #1f2937;
-      --border: #d1d5db;
-    }
-    * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-    body { margin: 0; background: var(--bg); color: var(--text); }
-    header {
-      background: var(--primary);
-      color: white;
-      padding: 1.2rem 1.5rem;
-      text-align: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-    header h1 { margin: 0; font-size: 1.5rem; }
-    header p { margin: 0.3rem 0 0; font-size: 0.92rem; opacity: 0.9; }
-    .container { max-width: 1150px; margin: 1.5rem auto; padding: 0 1rem; }
-    .card {
-      background: var(--card);
-      border-radius: 10px;
-      padding: 1.3rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      border: 1px solid #e5e7eb;
-    }
-    h2 { margin-top: 0; color: var(--primary); font-size: 1.2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem; }
-    .grid-form {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
-    }
-    label { display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 0.35rem; }
-    input, select {
-      width: 100%;
-      padding: 0.55rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 0.92rem;
-    }
-    .btn-group { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
-    button {
-      background: var(--primary-light);
-      color: white;
-      border: none;
-      padding: 0.6rem 1.1rem;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-    button:hover { background: var(--primary); }
-    button.secondary { background: #374151; }
-    button.danger { background: #b91c1c; }
-    .table-wrap { overflow-x: auto; max-height: 360px; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
-    th, td { border: 1px solid var(--border); padding: 0.5rem 0.65rem; text-align: center; }
-    th { background: #e8f0ec; color: var(--primary); position: sticky; top: 0; }
-    td:first-child, th:first-child { text-align: center; }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 1.2rem;
-    }
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 1.2rem;
-    }
-    canvas { max-height: 260px; }
-    .badge {
-      display: inline-block;
-      background: #d8f3dc;
-      color: var(--primary);
-      padding: 0.25rem 0.65rem;
-      border-radius: 20px;
-      font-weight: 700;
-      font-size: 0.85rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EstadíApp – Grupo3 | UNIPAZ</title>
+    <style>
+        :root {
+            --primary: #1F3A5F;
+            --secondary: #2A9D8F;
+            --accent: #E9A23B;
+            --bg-color: #F4F6F8;
+            --card-bg: #FFFFFF;
+            --text-color: #333333;
+            --text-light: #666666;
+            --danger: #E74C3C;
+            --border-radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding-bottom: 30px;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: #FFFFFF;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            color: var(--accent);
+            margin-bottom: 0.3rem;
+        }
+
+        header h2 {
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        nav {
+            display: flex;
+            background-color: var(--secondary);
+            overflow-x: auto;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tab-button {
+            flex: 1;
+            min-width: 90px;
+            padding: 12px 10px;
+            background: none;
+            border: none;
+            color: #FFFFFF;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab-button.active {
+            background-color: var(--primary);
+            border-bottom: 4px solid var(--accent);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .alert-box {
+            padding: 12px 15px;
+            background-color: #D4EDDA;
+            color: #155724;
+            border: 1px solid #C3E6CB;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-box.error {
+            background-color: #F8D7DA;
+            color: #721C24;
+            border-color: #F5C6CB;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        @media (min-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        .form-group input, 
+        .form-group select,
+        .form-group textarea {
+            padding: 10px;
+            border: 1px solid #CCC;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            background-color: #FFF;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 5px rgba(42, 157, 143, 0.4);
+        }
+
+        .btn-submit {
+            grid-column: 1 / -1;
+            background-color: var(--primary);
+            color: #FFF;
+            border: none;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        .btn-submit:hover {
+            background-color: #142640;
+        }
+
+        .actions-toolbar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #F8F9FA;
+            border: 1px solid #E0E0E0;
+            border-radius: var(--border-radius);
+        }
+
+        .btn-action {
+            padding: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: opacity 0.2s;
+            text-align: center;
+        }
+
+        .btn-action:hover {
+            opacity: 0.9;
+        }
+
+        .btn-csv-export { background-color: var(--secondary); color: #FFFFFF; }
+        .btn-csv-import { background-color: #34495E; color: #FFFFFF; }
+        .btn-json-export { background-color: var(--accent); color: #FFFFFF; }
+        .btn-json-import { background-color: #7F8C8D; color: #FFFFFF; }
+        .btn-print { background-color: var(--primary); color: #FFFFFF; width: 100%; padding: 14px; font-size: 1rem; font-weight: bold; }
+
+        .counter-box {
+            margin: 25px 0 15px 0;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #E0E0E0;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #E0E0E0;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) { background-color: #F8F9FA; }
+
+        .btn-delete {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .btn-delete:hover { background-color: #C0392B; }
+
+        .section-title {
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin: 20px 0 10px 0;
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 5px;
+        }
+
+        .filter-card {
+            background-color: #F8F9FA;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            border: 1px solid #E0E0E0;
+            margin-bottom: 20px;
+        }
+
+        .formula-text {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        .info-card {
+            padding: 15px;
+            background-color: #E2F0D9;
+            border: 1px solid #C5E0B4;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #274E13;
+        }
+
+        .chart-container {
+            width: 100%;
+            background-color: #FFFFFF;
+            border: 1px solid #E0E0E0;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-top: 15px;
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .chart-caption {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .report-header {
+            border-bottom: 3px double var(--primary);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        @media (min-width: 600px) {
+            .report-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media print {
+            nav, .actions-toolbar, .btn-submit, .btn-action, .btn-print, .no-print {
+                display: none !important;
+            }
+
+            body {
+                background-color: #FFFFFF;
+                color: #000000;
+                padding: 0;
+            }
+
+            .container {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .tab-content {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                display: block !important;
+            }
+
+            .chart-container {
+                page-break-inside: avoid;
+            }
+
+            .table-responsive {
+                overflow: visible;
+            }
+
+            textarea {
+                border: none !important;
+                resize: none;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<header>
-  <h1>EstadíApp – Grupo 3 · Evaluación Baños Edificio de Aulas (UNIPAZ)</h1>
-  <p>Kelly Yeritza Erazo Bahamón · Juan Sebastián Martínez Ortega | Estadística (840601)</p>
-</header>
+    <header>
+        <h1>EstadíApp – Grupo3</h1>
+        <h2>Evaluación del Servicio de Baños en el Edificio de Aulas de UNIPAZ</h2>
+    </header>
 
-<div class="container">
+    <nav>
+        <button class="tab-button active" onclick="openTab('registrar', event)">Registrar</button>
+        <button class="tab-button" onclick="openTab('analisis', event)">Análisis</button>
+        <button class="tab-button" onclick="openTab('probabilidad', event)">Probabilidad</button>
+        <button class="tab-button" onclick="openTab('informe', event)">Informe</button>
+    </nav>
 
-  <!-- FORMULARIO DE REGISTRO (SOLO VARIABLES PREGUNTADAS) -->
-  <div class="card">
-    <h2>1. Nuevo Registro de Observación</h2>
-    <form id="registroForm">
-      <div class="grid-form">
-        <div>
-          <label for="fechaHora">Fecha y Hora</label>
-          <input type="datetime-local" id="fechaHora" required />
+    <div class="container">
+        
+        <!-- PESTAÑA REGISTRAR -->
+        <div id="registrar" class="tab-content active">
+            <div id="alertBox" class="alert-box"></div>
+
+            <form id="registroForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="fechaHora">Fecha y Hora</label>
+                        <input type="datetime-local" id="fechaHora" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="piso">Piso del edificio</label>
+                        <select id="piso" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="Piso 1">Piso 1</option>
+                            <option value="Piso 2">Piso 2</option>
+                            <option value="Piso 3">Piso 3</option>
+                            <option value="Piso 4">Piso 4</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ubicacion">Ubicación del baño</label>
+                        <select id="ubicacion" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="Bloque A">Bloque A</option>
+                            <option value="Bloque B">Bloque B</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="limpieza">Percepción de limpieza y aseo</label>
+                        <select id="limpieza" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="1 - Muy malo">1 - Muy malo</option>
+                            <option value="2 - Malo">2 - Malo</option>
+                            <option value="3 - Aceptable">3 - Aceptable</option>
+                            <option value="4 - Bueno">4 - Bueno</option>
+                            <option value="5 - Excelente">5 - Excelente</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="insumos">Disponibilidad de insumos</label>
+                        <select id="insumos" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="1 - Nunca hay">1 - Nunca hay</option>
+                            <option value="2 - Casi nunca">2 - Casi nunca</option>
+                            <option value="3 - A veces">3 - A veces</option>
+                            <option value="4 - Casi siempre">4 - Casi siempre</option>
+                            <option value="5 - Siempre">5 - Siempre</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="frecuenciaPersonal">Frecuencia personal de aseo</label>
+                        <select id="frecuenciaPersonal" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="Constantemente durante el día">Constantemente durante el día</option>
+                            <option value="1 o 2 veces al día">1 o 2 veces al día</option>
+                            <option value="Rara vez">Rara vez</option>
+                            <option value="Nunca">Nunca</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="infraestructura">Estado infraestructura y grifería</label>
+                        <select id="infraestructura" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="Todo operativo">Todo operativo</option>
+                            <option value="Fuga/Goteo menor">Fuga/Goteo menor</option>
+                            <option value="Sanitarios/Lavamanos fuera de servicio">Sanitarios/Lavamanos fuera de servicio</option>
+                            <option value="Daño grave / Sin agua">Daño grave / Sin agua</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Guardar registro</button>
+                </div>
+            </form>
+
+            <div class="actions-toolbar">
+                <button type="button" class="btn-action btn-csv-export" onclick="exportarCSV()">Exportar CSV (Excel)</button>
+                <button type="button" class="btn-action btn-csv-import" onclick="document.getElementById('fileCSV').click()">Importar CSV y unir</button>
+                <button type="button" class="btn-action btn-json-export" onclick="descargarRespaldoJSON()">Descargar respaldo (.json)</button>
+                <button type="button" class="btn-action btn-json-import" onclick="document.getElementById('fileJSON').click()">Restaurar respaldo</button>
+            </div>
+
+            <input type="file" id="fileCSV" accept=".csv" style="display: none;" onchange="importarCSV(event)">
+            <input type="file" id="fileJSON" accept=".json" style="display: none;" onchange="restaurarRespaldoJSON(event)">
+
+            <div class="counter-box">
+                <span>Registros guardados:</span>
+                <span id="totalRegistros">0</span>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Fecha y Hora</th>
+                            <th>Franja Horaria</th>
+                            <th>Piso</th>
+                            <th>Ubicación</th>
+                            <th>Limpieza</th>
+                            <th>Insumos</th>
+                            <th>Frec. Aseo</th>
+                            <th>Infraestructura</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaCuerpo">
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div>
-          <label for="piso">Piso del Edificio</label>
-          <select id="piso" required>
-            <option value="Piso 1">Piso 1</option>
-            <option value="Piso 2">Piso 2</option>
-            <option value="Piso 3">Piso 3</option>
-            <option value="Piso 4">Piso 4</option>
-          </select>
-        </div>
-        <div>
-          <label for="bloque">Ubicación del Baño</label>
-          <select id="bloque" required>
-            <option value="Bloque A">Bloque A</option>
-            <option value="Bloque B">Bloque B</option>
-          </select>
-        </div>
-        <div>
-          <label for="limpieza">Percepción de Limpieza y Aseo (1 a 5)</label>
-          <select id="limpieza" required>
-            <option value="1">1 - Muy malo</option>
-            <option value="2">2 - Malo</option>
-            <option value="3" selected>3 - Regular</option>
-            <option value="4">4 - Bueno</option>
-            <option value="5">5 - Excelente</option>
-          </select>
-        </div>
-        <div>
-          <label for="insumos">Disponibilidad de Insumos (Papel/Jabón, 1 a 5)</label>
-          <select id="insumos" required>
-            <option value="1" selected>1 - Nunca hay</option>
-            <option value="2">2 - Casi nunca</option>
-            <option value="3">3 - A veces</option>
-            <option value="4">4 - Casi siempre</option>
-            <option value="5">5 - Siempre hay</option>
-          </select>
-        </div>
-        <div>
-          <label for="aseo">Frecuencia Personal de Aseo</label>
-          <select id="aseo" required>
-            <option value="Constantemente durante el día">Constantemente durante el día</option>
-            <option value="1 o 2 veces al día" selected>1 o 2 veces al día</option>
-            <option value="Rara vez">Rara vez</option>
-            <option value="Nunca">Nunca</option>
-          </select>
-        </div>
-        <div>
-          <label for="infra">Estado Infraestructura y Grifería</label>
-          <select id="infra" required>
-            <option value="Todo operativo">Todo operativo</option>
-            <option value="Fuga/Goteo menor">Fuga/Goteo menor</option>
-            <option value="Sanitarios/Lavamanos fuera de servicio">Sanitarios/Lavamanos fuera de servicio</option>
-            <option value="Daño grave / Sin agua">Daño grave / Sin agua</option>
-          </select>
-        </div>
-      </div>
-      <div class="btn-group">
-        <button type="submit">+ Guardar Registro</button>
-        <button type="button" class="secondary" onclick="exportarCSV()">Descargar Base de Datos (.CSV)</button>
-        <button type="button" class="danger" onclick="restaurarBaseInicial()">Restaurar 50 Registros Originales</button>
-      </div>
-    </form>
-  </div>
 
-  <!-- BASE DE DATOS -->
-  <div class="card">
-    <h2>2. Base de Datos Registrada <span class="badge" id="contadorRegistros">50 registros</span></h2>
-    <div class="table-wrap">
-      <table id="tablaDatos">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Fecha y Hora</th>
-            <th>Franja Horaria</th>
-            <th>Piso</th>
-            <th>Ubicación</th>
-            <th>Limpieza (1-5)</th>
-            <th>Insumos (1-5)</th>
-            <th>Frecuencia Personal Aseo</th>
-            <th>Estado Infraestructura</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- MEDIDAS DESCRIPTIVAS -->
-  <div class="card">
-    <h2>3. Medidas Estadísticas Descriptivas (Variables Cuantitativas)</h2>
-    <div class="stats-grid" id="contenedorMedidas"></div>
-  </div>
-
-  <!-- GRÁFICOS -->
-  <div class="card">
-    <h2>4. Gráficos Estadísticos</h2>
-    <div class="charts-grid">
-      <div><canvas id="chartPiso"></canvas></div>
-      <div><canvas id="chartAseo"></canvas></div>
-      <div><canvas id="chartInfra"></canvas></div>
-      <div><canvas id="chartLimpieza"></canvas></div>
-      <div><canvas id="chartInsumos"></canvas></div>
-    </div>
-  </div>
-
-</div>
-
-<script>
-  const DATOS_INICIALES = [
-    { fechaHora: "2026-11-18T08:15", piso: "Piso 1", bloque: "Bloque A", limpieza: 3, insumos: 2, aseo: "1 o 2 veces al día", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-18T09:10", piso: "Piso 1", bloque: "Bloque B", limpieza: 3, insumos: 1, aseo: "Constantemente durante el día", infra: "Fuga/Goteo menor" },
-    { fechaHora: "2026-11-18T10:30", piso: "Piso 4", bloque: "Bloque A", limpieza: 1, insumos: 1, aseo: "Nunca", infra: "Daño grave / Sin agua" },
-    { fechaHora: "2026-11-18T11:20", piso: "Piso 1", bloque: "Bloque B", limpieza: 3, insumos: 3, aseo: "1 o 2 veces al día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-18T07:45", piso: "Piso 2", bloque: "Bloque A", limpieza: 4, insumos: 2, aseo: "1 o 2 veces al día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-18T08:40", piso: "Piso 3", bloque: "Bloque B", limpieza: 3, insumos: 1, aseo: "1 o 2 veces al día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-18T09:50", piso: "Piso 2", bloque: "Bloque B", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-18T10:05", piso: "Piso 3", bloque: "Bloque A", limpieza: 3, insumos: 2, aseo: "1 o 2 veces al día", infra: "Fuga/Goteo menor" },
-    { fechaHora: "2026-11-18T11:45", piso: "Piso 4", bloque: "Bloque B", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-18T13:15", piso: "Piso 1", bloque: "Bloque A", limpieza: 2, insumos: 1, aseo: "1 o 2 veces al día", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-18T14:20", piso: "Piso 2", bloque: "Bloque A", limpieza: 4, insumos: 3, aseo: "Constantemente durante el día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-18T15:10", piso: "Piso 3", bloque: "Bloque B", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-18T16:30", piso: "Piso 4", bloque: "Bloque A", limpieza: 2, insumos: 1, aseo: "Nunca", infra: "Fuga/Goteo menor" },
-    { fechaHora: "2026-11-18T17:15", piso: "Piso 1", bloque: "Bloque B", limpieza: 3, insumos: 2, aseo: "1 o 2 veces al día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-18T18:25", piso: "Piso 2", bloque: "Bloque B", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Todo operativo" },
-    { fechaHora: "2026-11-18T19:10", piso: "Piso 3", bloque: "Bloque A", limpieza: 1, insumos: 1, aseo: "Nunca", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-18T20:00", piso: "Piso 1", bloque: "Bloque A", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Fuga/Goteo menor" },
-    { fechaHora: "2026-11-19T07:10", piso: "Piso 1", bloque: "Bloque A", limpieza: 4, insumos: 3, aseo: "Constantemente durante el día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-19T07:35", piso: "Piso 2", bloque: "Bloque B", limpieza: 4, insumos: 2, aseo: "1 o 2 veces al día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-19T07:55", piso: "Piso 3", bloque: "Bloque A", limpieza: 3, insumos: 1, aseo: "1 o 2 veces al día", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-19T08:05", piso: "Piso 4", bloque: "Bloque B", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-19T08:20", piso: "Piso 2", bloque: "Bloque A", limpieza: 3, insumos: 2, aseo: "1 o 2 veces al día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-19T08:30", piso: "Piso 1", bloque: "Bloque B", limpieza: 3, insumos: 1, aseo: "1 o 2 veces al día", infra: "Fuga/Goteo menor" },
-    { fechaHora: "2026-11-19T08:45", piso: "Piso 3", bloque: "Bloque B", limpieza: 4, insumos: 2, aseo: "Constantemente durante el día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-19T08:55", piso: "Piso 4", bloque: "Bloque A", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Daño grave / Sin agua" },
-    { fechaHora: "2026-11-19T09:05", piso: "Piso 2", bloque: "Bloque A", limpieza: 3, insumos: 1, aseo: "1 o 2 veces al día", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-19T09:15", piso: "Piso 3", bloque: "Bloque A", limpieza: 3, insumos: 2, aseo: "1 o 2 veces al día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-19T09:22", piso: "Piso 1", bloque: "Bloque A", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-19T09:30", piso: "Piso 4", bloque: "Bloque B", limpieza: 2, insumos: 1, aseo: "Nunca", infra: "Fuga/Goteo menor" },
-    { fechaHora: "2026-11-19T09:38", piso: "Piso 2", bloque: "Bloque B", limpieza: 3, insumos: 2, aseo: "1 o 2 veces al día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-19T09:45", piso: "Piso 3", bloque: "Bloque B", limpieza: 1, insumos: 1, aseo: "Rara vez", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-19T09:52", piso: "Piso 1", bloque: "Bloque A", limpieza: 4, insumos: 3, aseo: "Constantemente durante el día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-19T09:58", piso: "Piso 2", bloque: "Bloque A", limpieza: 3, insumos: 1, aseo: "1 o 2 veces al día", infra: "Fuga/Goteo menor" },
-    { fechaHora: "2026-11-19T10:01", piso: "Piso 1", bloque: "Bloque B", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-19T10:02", piso: "Piso 3", bloque: "Bloque A", limpieza: 3, insumos: 2, aseo: "1 o 2 veces al día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-19T10:05", piso: "Piso 4", bloque: "Bloque A", limpieza: 1, insumos: 1, aseo: "Nunca", infra: "Daño grave / Sin agua" },
-    { fechaHora: "2026-11-19T10:12", piso: "Piso 2", bloque: "Bloque B", limpieza: 3, insumos: 2, aseo: "1 o 2 veces al día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-19T10:18", piso: "Piso 1", bloque: "Bloque A", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-19T10:25", piso: "Piso 3", bloque: "Bloque B", limpieza: 4, insumos: 3, aseo: "Constantemente durante el día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-19T10:33", piso: "Piso 4", bloque: "Bloque B", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Fuga/Goteo menor" },
-    { fechaHora: "2026-11-19T10:40", piso: "Piso 2", bloque: "Bloque A", limpieza: 3, insumos: 1, aseo: "1 o 2 veces al día", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-19T10:48", piso: "Piso 1", bloque: "Bloque B", limpieza: 3, insumos: 2, aseo: "1 o 2 veces al día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-19T10:55", piso: "Piso 3", bloque: "Bloque A", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Fuga/Goteo menor" },
-    { fechaHora: "2026-11-19T11:05", piso: "Piso 2", bloque: "Bloque B", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-19T11:15", piso: "Piso 4", bloque: "Bloque A", limpieza: 1, insumos: 1, aseo: "Nunca", infra: "Daño grave / Sin agua" },
-    { fechaHora: "2026-11-19T11:25", piso: "Piso 1", bloque: "Bloque A", limpieza: 4, insumos: 2, aseo: "Constantemente durante el día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-19T11:35", piso: "Piso 3", bloque: "Bloque B", limpieza: 2, insumos: 1, aseo: "1 o 2 veces al día", infra: "Sanitarios/Lavamanos fuera de servicio" },
-    { fechaHora: "2026-11-19T11:42", piso: "Piso 2", bloque: "Bloque A", limpieza: 3, insumos: 2, aseo: "1 o 2 veces al día", infra: "Todo operativo" },
-    { fechaHora: "2026-11-19T11:50", piso: "Piso 4", bloque: "Bloque B", limpieza: 2, insumos: 1, aseo: "Rara vez", infra: "Fuga/Goteo menor" },
-    { fechaHora: "2026-11-19T12:05", piso: "Piso 1", bloque: "Bloque B", limpieza: 3, insumos: 1, aseo: "1 o 2 veces al día", infra: "Todo operativo" }
-  ];
-
-  const STORAGE_KEY = "estadiapp_unipaz_banos_v2";
-  let registros = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [...DATOS_INICIALES];
-  let charts = {};
-
-  function obtenerFranja(fechaHoraStr) {
-    if (!fechaHoraStr || !fechaHoraStr.includes("T")) return "Sin hora";
-    const hora = fechaHoraStr.split("T")[1].slice(0, 2);
-    return `${hora}:00–${hora}:59`;
-  }
-
-  function guardarStorage() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
-  }
-
-  function restaurarBaseInicial() {
-    if (confirm("¿Deseas restaurar los 50 registros iniciales sin el campo Sexo?")) {
-      registros = [...DATOS_INICIALES];
-      guardarStorage();
-      renderizarTodo();
-    }
-  }
-
-  function eliminarRegistro(index) {
-    registros.splice(index, 1);
-    guardarStorage();
-    renderizarTodo();
-  }
-
-  document.getElementById("registroForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-    const nuevo = {
-      fechaHora: document.getElementById("fechaHora").value,
-      piso: document.getElementById("piso").value,
-      bloque: document.getElementById("bloque").value,
-      limpieza: Number(document.getElementById("limpieza").value),
-      insumos: Number(document.getElementById("insumos").value),
-      aseo: document.getElementById("aseo").value,
-      infra: document.getElementById("infra").value
-    };
-    registros.push(nuevo);
-    guardarStorage();
-    renderizarTodo();
-  });
-
-  function calcularMedidas(arr) {
-    const n = arr.length;
-    if (n === 0) return null;
-    const sorted = [...arr].sort((a, b) => a - b);
-    const suma = arr.reduce((acc, v) => acc + v, 0);
-    const media = suma / n;
-    const mediana = n % 2 === 0 ? (sorted[n/2 - 1] + sorted[n/2]) / 2 : sorted[Math.floor(n/2)];
-
-    const freq = {};
-    arr.forEach(v => freq[v] = (freq[v] || 0) + 1);
-    const maxF = Math.max(...Object.values(freq));
-    const moda = Object.keys(freq).filter(k => freq[k] === maxF).join(", ");
-
-    const dm = arr.reduce((acc, v) => acc + Math.abs(v - media), 0) / n;
-    const varianza = n > 1 ? arr.reduce((acc, v) => acc + Math.pow(v - media, 2), 0) / (n - 1) : 0;
-    const desv = Math.sqrt(varianza);
-    const cv = media !== 0 ? (desv / media) * 100 : 0;
-
-    const percentil = (p) => {
-      const pos = (p / 100) * (n - 1);
-      const base = Math.floor(pos);
-      const rest = pos - base;
-      return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
-    };
-
-    return {
-      n, media, mediana, moda,
-      min: sorted[0], max: sorted[n - 1], rango: sorted[n - 1] - sorted[0],
-      dm, varianza, desv, cv,
-      q1: percentil(25), q2: percentil(50), q3: percentil(75), p90: percentil(90)
-    };
-  }
-
-  function renderizarTabla() {
-    const tbody = document.querySelector("#tablaDatos tbody");
-    tbody.innerHTML = "";
-    document.getElementById("contadorRegistros").textContent = `${registros.length} registros`;
-
-    registros.forEach((r, i) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${i + 1}</td>
-        <td>${r.fechaHora.replace("T", " ")}</td>
-        <td>${obtenerFranja(r.fechaHora)}</td>
-        <td>${r.piso}</td>
-        <td>${r.bloque}</td>
-        <td>${r.limpieza}</td>
-        <td>${r.insumos}</td>
-        <td>${r.aseo}</td>
-        <td>${r.infra}</td>
-        <td><button class="danger" style="padding:0.25rem 0.5rem;font-size:0.78rem;" onclick="eliminarRegistro(${i})">X</button></td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  function renderizarMedidas() {
-    const cont = document.getElementById("contenedorMedidas");
-    const mLimp = calcularMedidas(registros.map(r => r.limpieza));
-    const mIns = calcularMedidas(registros.map(r => r.insumos));
-    if (!mLimp || !mIns) { cont.innerHTML = "<p>Sin datos registrados.</p>"; return; }
-
-    const crearTablaMedida = (titulo, m) => `
-      <table>
-        <thead><tr><th colspan="2">${titulo}</th></tr></thead>
-        <tbody>
-          <tr><td>Media aritmética (x̄)</td><td><b>${m.media.toFixed(2)}</b></td></tr>
-          <tr><td>Mediana (Me)</td><td><b>${m.mediana.toFixed(2)}</b></td></tr>
-          <tr><td>Moda (Mo)</td><td><b>${m.moda}</b></td></tr>
-          <tr><td>Rango (R)</td><td>${m.rango} (Min: ${m.min} – Max: ${m.max})</td></tr>
-          <tr><td>Desviación Media (DM)</td><td>${m.dm.toFixed(4)}</td></tr>
-   
+        <!-- PESTAÑA ANÁLISIS -->
+        <div id="analisis" class="tab-content">
+            <div class="filter-card">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="analisisVariable">Seleccionar Variable a Analizar:</label>
+                        <select id="analisisVariable" onchange="ejecutarAnalisis()">
+                            <optgroup label="Cuantitativas">
+                                <option value="limpiezaNum">Percepción de limpieza y aseo (1 a 5)</option>
+                                <option value="insumosNum">Disponibilidad de insumos (1 a 5)</option>
+                            </optgroup>
+                            <optgroup label="Cualitativas">
+                                <option value="franjaHoraria">Franja horaria</option>
+                                <option value="piso">Piso del edificio</option>
+                                <option value="ubicacion">Ubicación del baño</option>
+                                <option value="limpieza">Percepción de limpieza (Categoría)</option>
+                                <option value="insumos">Disponibilidad de insumos (Categoría)</option>
+                                <option value="frecuenciaPersonal">Frecuencia personal de aseo</option>
+                                <option value="infraestructura">Estado infraestructura y grifería</option>
+                            </optgroup>
+                            
